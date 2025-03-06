@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -85,18 +84,22 @@ const ExecuteWorkout = () => {
         
         setWorkout(workoutData);
         
-        // Fetch exercises and maintain their order
         const { data: exercisesData, error: exercisesError } = await supabase
           .from('exercises')
           .select('*')
           .eq('workout_id', id)
-          .order('created_at', { ascending: true });
+          .order('id', { ascending: true });
         
         if (exercisesError) throw exercisesError;
         
-        // Sort exercises based on the order they were added
-        // This ensures they appear in the same order as in the EditWorkout page
-        setExercises(exercisesData || []);
+        const sortedExercises = exercisesData ? [...exercisesData].sort((a, b) => {
+          if (a.order !== null && b.order !== null && a.order !== undefined && b.order !== undefined) {
+            return a.order - b.order;
+          }
+          return 0;
+        }) : [];
+        
+        setExercises(sortedExercises);
       } catch (error: any) {
         console.error('Error fetching workout data:', error);
         toast.error('Failed to load workout');
@@ -118,7 +121,7 @@ const ExecuteWorkout = () => {
   const handleExerciseComplete = (exerciseId: string) => {
     const isComplete = markExerciseComplete(exerciseId);
     if (isComplete) {
-      toggleTimer(); // Stop timer when workout is complete
+      toggleTimer();
     }
   };
 
