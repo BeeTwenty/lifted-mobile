@@ -10,6 +10,9 @@ import android.os.PowerManager;
 import android.net.Uri;
 import android.provider.Settings;
 import android.os.Build;
+import android.app.NotificationManager;
+import android.app.NotificationChannel;
+import android.content.Context;
 
 public class MainActivity extends BridgeActivity {
 
@@ -22,6 +25,22 @@ public class MainActivity extends BridgeActivity {
         webSettings.setJavaScriptEnabled(true);
         webSettings.setDomStorageEnabled(true);
         webSettings.setMediaPlaybackRequiresUserGesture(false);
+        
+        // Create notification channels for Android O and above
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationManager notificationManager = 
+                (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+            
+            NotificationChannel channel = new NotificationChannel(
+                "workout_notifications",
+                "Workout Notifications",
+                NotificationManager.IMPORTANCE_HIGH
+            );
+            channel.setDescription("Notifications for workout timers and completions");
+            channel.enableVibration(true);
+            channel.setLockscreenVisibility(android.app.Notification.VISIBILITY_PUBLIC);
+            notificationManager.createNotificationChannel(channel);
+        }
         
         // Request battery optimization exemption for background processes
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {

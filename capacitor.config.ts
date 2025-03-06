@@ -25,9 +25,8 @@ const config: CapacitorConfig = {
       iconColor: "#488AFF",
       sound: "default",
       allowWhileIdle: true,
-    },
-    BackgroundTask: {
-      allowWakeLocks: true,
+      importance: "high",
+      foreground: true
     }
   },
   bundledWebRuntime: false
