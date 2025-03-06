@@ -6,7 +6,7 @@ const config: CapacitorConfig = {
   appName: 'Lifted',
   webDir: 'dist',
   server: {
-    url: 'https://0a129f32-894e-4e74-ab83-0d65b4bb11ac.lovableproject.com?forceHideBadge=true',
+    url: 'https://workoutapp.au11no.com',
     cleartext: true,
     androidScheme: 'https'
   },
@@ -23,7 +23,7 @@ const config: CapacitorConfig = {
     LocalNotifications: {
       smallIcon: "ic_stat_icon_config_sample",
       iconColor: "#488AFF",
-      sound: null, // Try with null to use system default sound
+      sound: null, // Try with system default sound
     },
   },
   bundledWebRuntime: false
