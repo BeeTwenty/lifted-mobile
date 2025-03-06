@@ -1,17 +1,73 @@
 
+import { useEffect, useState } from "react";
 import NavBar from "@/components/NavBar";
 import { Button } from "@/components/ui/button";
 import { Plus, Dumbbell } from "lucide-react";
-import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
+
+// Define the workout routine type based on what we're getting from the database
+interface WorkoutRoutine {
+  id: string;
+  title: string;
+  created_at: string;
+  user_id: string;
+  duration: number;
+  notes: string | null;
+  default_rest_time: number | null;
+}
 
 const Dashboard = () => {
-  // Sample workout routines data - in a real app, we would fetch this from Supabase
-  const [workoutRoutines, setWorkoutRoutines] = useState([
-    { id: 1, title: "Full Body Workout", exercises: 8 },
-    { id: 2, title: "Upper Body Focus", exercises: 6 },
-    { id: 3, title: "Leg Day", exercises: 7 },
-  ]);
+  const [workoutRoutines, setWorkoutRoutines] = useState<WorkoutRoutine[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const { user } = useAuth();
+
+  useEffect(() => {
+    // Fetch workout routines from Supabase when the component mounts
+    const fetchWorkoutRoutines = async () => {
+      try {
+        setIsLoading(true);
+        
+        if (!user) return;
+        
+        const { data, error } = await supabase
+          .from('workouts')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false });
+        
+        if (error) throw error;
+        
+        setWorkoutRoutines(data || []);
+      } catch (error: any) {
+        console.error('Error fetching workout routines:', error);
+        toast.error('Failed to load your workout routines');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchWorkoutRoutines();
+  }, [user]);
+
+  // Count the number of exercises for each workout routine
+  const fetchExerciseCount = async (workoutId: string) => {
+    try {
+      const { count, error } = await supabase
+        .from('exercises')
+        .select('*', { count: 'exact', head: true })
+        .eq('workout_id', workoutId);
+      
+      if (error) throw error;
+      
+      return count || 0;
+    } catch (error) {
+      console.error('Error counting exercises:', error);
+      return 0;
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -25,7 +81,11 @@ const Dashboard = () => {
           </Button>
         </div>
         
-        {workoutRoutines.length === 0 ? (
+        {isLoading ? (
+          <div className="flex justify-center py-10">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          </div>
+        ) : workoutRoutines.length === 0 ? (
           <div className="text-center py-10">
             <Dumbbell className="h-12 w-12 text-gray-300 mx-auto mb-3" />
             <p className="text-gray-500">No workout routines yet</p>
@@ -43,7 +103,9 @@ const Dashboard = () => {
                   <div className="flex justify-between items-center">
                     <div>
                       <h3 className="font-medium">{routine.title}</h3>
-                      <p className="text-sm text-gray-500">{routine.exercises} exercises</p>
+                      <p className="text-sm text-gray-500">
+                        {routine.duration} min • {new Date(routine.created_at).toLocaleDateString()}
+                      </p>
                     </div>
                     <Dumbbell className="h-5 w-5 text-primary" />
                   </div>
