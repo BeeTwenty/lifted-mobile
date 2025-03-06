@@ -1,5 +1,5 @@
-
 import { useState, useEffect, useRef } from "react";
+import { scheduleRestEndNotification, cancelNotification } from "@/services/NotificationService";
 
 export const useWorkoutTimer = (initialRunningState = false) => {
   const [isRunning, setIsRunning] = useState(initialRunningState);
@@ -8,6 +8,7 @@ export const useWorkoutTimer = (initialRunningState = false) => {
   
   const [restTimeRemaining, setRestTimeRemaining] = useState<number | null>(null);
   const restTimerRef = useRef<number | null>(null);
+  const notificationIdRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (isRunning) {
@@ -27,6 +28,13 @@ export const useWorkoutTimer = (initialRunningState = false) => {
 
   useEffect(() => {
     if (restTimeRemaining !== null && restTimeRemaining > 0) {
+      // Schedule notification when rest timer starts
+      if (restTimeRemaining && notificationIdRef.current === null) {
+        scheduleRestEndNotification(restTimeRemaining).then(id => {
+          if (id) notificationIdRef.current = id;
+        });
+      }
+
       restTimerRef.current = window.setInterval(() => {
         setRestTimeRemaining(prev => {
           if (prev === null || prev <= 1) {
@@ -42,11 +50,22 @@ export const useWorkoutTimer = (initialRunningState = false) => {
       }, 1000);
     } else if (restTimerRef.current) {
       clearInterval(restTimerRef.current);
+      
+      // Cancel notification if rest timer was manually skipped or completed
+      if (notificationIdRef.current !== null) {
+        cancelNotification(notificationIdRef.current);
+        notificationIdRef.current = null;
+      }
     }
 
     return () => {
       if (restTimerRef.current) {
         clearInterval(restTimerRef.current);
+      }
+      
+      // Clean up notification when component unmounts
+      if (notificationIdRef.current !== null) {
+        cancelNotification(notificationIdRef.current);
       }
     };
   }, [restTimeRemaining]);

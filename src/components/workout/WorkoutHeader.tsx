@@ -1,8 +1,11 @@
 
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Bell } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import WorkoutTimer from "./WorkoutTimer";
+import { checkNotificationsSupport } from "@/services/NotificationService";
+import { toast } from "sonner";
 
 interface WorkoutHeaderProps {
   title: string;
@@ -22,6 +25,25 @@ const WorkoutHeader = ({
   onSkipRest
 }: WorkoutHeaderProps) => {
   const navigate = useNavigate();
+  const [notificationsSupported, setNotificationsSupported] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    const checkNotifications = async () => {
+      const isSupported = await checkNotificationsSupport();
+      setNotificationsSupported(isSupported);
+      
+      if (!isSupported) {
+        toast.info(
+          "Enable notifications to get alerts when rest timers complete",
+          {
+            duration: 5000,
+          }
+        );
+      }
+    };
+    
+    checkNotifications();
+  }, []);
 
   return (
     <div className="flex items-center justify-between mb-6">
