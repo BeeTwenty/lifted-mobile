@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -17,7 +18,7 @@ interface Exercise {
   reps: number;
   weight?: number;
   notes?: string;
-  order?: number; // Added to track original order
+  order?: number; // Added the order property
 }
 
 export const useWorkoutState = (workout: Workout | null, exercises: Exercise[], userId: string | undefined) => {
