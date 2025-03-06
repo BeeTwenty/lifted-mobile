@@ -23,7 +23,7 @@ const config: CapacitorConfig = {
     LocalNotifications: {
       smallIcon: "ic_stat_icon_config_sample",
       iconColor: "#488AFF",
-      sound: null, // Try with system default sound
+      sound: "default", // Explicitly set to use default system sound
     },
   },
   bundledWebRuntime: false

@@ -75,14 +75,14 @@ export const scheduleRestEndNotification = async (delay: number): Promise<number
     // Generate a unique ID for this notification
     const notificationId = new Date().getTime();
     
-    // Schedule the notification
+    // Schedule the notification - explicitly set sound to default
     await LocalNotifications.schedule({
       notifications: [
         {
           id: notificationId,
           title: 'Rest Complete',
           body: getRandomMessage(),
-          sound: null, // First try without specifying sound to use default
+          sound: 'default', // Explicitly use the default system sound
           schedule: { at: new Date(Date.now() + delay * 1000) },
           actionTypeId: 'WORKOUT_TIMER',
           extra: {
@@ -125,9 +125,9 @@ export const registerNotificationChannel = async (): Promise<void> => {
         id: 'workout-timer',
         name: 'Workout Timer',
         description: 'Notifications for workout rest timers',
-        importance: 5,
+        importance: 5, // High importance for timers
         visibility: 1,
-        sound: null, // Try default system sound instead
+        sound: 'default', // Explicitly set to use default system sound
         vibration: true,
         lights: true
       });
