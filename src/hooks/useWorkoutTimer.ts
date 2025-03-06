@@ -4,7 +4,7 @@ import {
   scheduleRestEndNotification, 
   cancelNotification, 
   initializeNotifications 
-} from "@/services/NotificationService";
+} from "@/services/notifications";
 import { Capacitor } from '@capacitor/core';
 
 export const useWorkoutTimer = (initialRunningState = false) => {

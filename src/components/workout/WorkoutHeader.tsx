@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, Bell } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import WorkoutTimer from "./WorkoutTimer";
-import { checkNotificationsSupport, sendTestNotification } from "@/services/NotificationService";
+import { checkNotificationsSupport, sendTestNotification } from "@/services/notifications";
 import { toast } from "sonner";
 import { Capacitor } from "@capacitor/core";
 
