@@ -1,6 +1,8 @@
-
+import { useEffect } from "react";
 import { Dumbbell } from "lucide-react";
 import ExerciseItem from "./ExerciseItem";
+import { PushNotifications } from "@capacitor/push-notifications";
+import { Capacitor } from "@capacitor/core";
 
 interface Exercise {
   id: string;
@@ -14,16 +16,25 @@ interface Exercise {
 interface ExercisesListProps {
   exercises: Exercise[];
   onRemove: (id: string) => void;
-  onMove: (id: string, direction: 'up' | 'down') => void;
+  onMove: (id: string, direction: "up" | "down") => void;
   onUpdate: (id: string, field: string, value: any) => void;
 }
 
-const ExercisesList = ({
-  exercises,
-  onRemove,
-  onMove,
-  onUpdate
-}: ExercisesListProps) => {
+const ExercisesList = ({ exercises, onRemove, onMove, onUpdate }: ExercisesListProps) => {
+  useEffect(() => {
+    const requestPermission = async () => {
+      if (!Capacitor.isNativePlatform()) return; // Only request on Android/iOS
+      const permStatus = await PushNotifications.requestPermissions();
+      if (permStatus.receive === "granted") {
+        console.log("Notification permission granted");
+      } else {
+        console.warn("Notification permission denied");
+      }
+    };
+
+    requestPermission();
+  }, []); // Runs once when component mounts
+
   if (exercises.length === 0) {
     return (
       <div className="text-center bg-gray-50 py-6 rounded-md border border-dashed border-gray-300">
