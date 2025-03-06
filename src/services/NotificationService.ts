@@ -26,14 +26,15 @@ const getRandomMessage = (): string => {
  * Check if notifications are supported
  */
 export const checkNotificationsSupport = async (): Promise<boolean> => {
-  // When running in a browser that doesn't support Capacitor
-  if (!Capacitor.isNativePlatform()) {
-    console.log('Not running on native platform, skipping notifications');
-    return false;
-  }
-
   try {
+    // Check if running on a native platform
+    if (!Capacitor.isNativePlatform()) {
+      console.log('Not running on native platform, skipping notifications');
+      return false;
+    }
+
     console.log('Checking notification permissions...');
+    // First check existing permissions
     const { display } = await LocalNotifications.checkPermissions();
     console.log('Current permission status:', display);
     
@@ -41,6 +42,7 @@ export const checkNotificationsSupport = async (): Promise<boolean> => {
       return true;
     }
     
+    // If not granted, request permissions
     console.log('Requesting notification permissions...');
     const { display: requestedPermission } = await LocalNotifications.requestPermissions();
     console.log('Requested permission result:', requestedPermission);
@@ -58,13 +60,13 @@ export const checkNotificationsSupport = async (): Promise<boolean> => {
  * @returns The notification ID if scheduled successfully, null otherwise
  */
 export const scheduleRestEndNotification = async (delay: number): Promise<number | null> => {
-  // Only attempt to schedule if we're running on a supported platform
-  if (!Capacitor.isNativePlatform()) {
-    console.log('Notifications not supported in this environment');
-    return null;
-  }
-
   try {
+    // Only attempt to schedule if we're running on a supported platform
+    if (!Capacitor.isNativePlatform()) {
+      console.log('Notifications not supported in this environment');
+      return null;
+    }
+
     console.log(`Attempting to schedule notification with delay: ${delay} seconds`);
     const permissionGranted = await checkNotificationsSupport();
     if (!permissionGranted) {
@@ -110,34 +112,46 @@ export const scheduleRestEndNotification = async (delay: number): Promise<number
  * This is useful for testing notification permissions and delivery
  */
 export const sendTestNotification = async (): Promise<boolean> => {
-  if (!Capacitor.isNativePlatform()) {
-    console.log('Notifications not supported in browser environment');
-    return false;
-  }
-
   try {
-    console.log('Sending test notification...');
-    const permissionGranted = await checkNotificationsSupport();
-    if (!permissionGranted) {
-      console.log('Notification permission not granted');
+    // Log more information for debugging
+    console.log('Testing notification support...');
+    console.log('Platform:', Capacitor.getPlatform());
+    console.log('Is native:', Capacitor.isNativePlatform());
+
+    if (!Capacitor.isNativePlatform()) {
+      console.log('Notifications not supported in browser environment');
       return false;
+    }
+
+    // Get notification permissions
+    console.log('Sending test notification - checking permissions first...');
+    const permissionCheck = await LocalNotifications.checkPermissions();
+    console.log('Permission status:', permissionCheck);
+    
+    if (permissionCheck.display !== 'granted') {
+      console.log('Requesting permissions explicitly...');
+      const requestResult = await LocalNotifications.requestPermissions();
+      console.log('Request result:', requestResult);
+      
+      if (requestResult.display !== 'granted') {
+        console.log('Permission denied after explicit request');
+        return false;
+      }
     }
 
     // Generate a unique ID for this notification
     const notificationId = new Date().getTime();
     
-    // Send an immediate notification
+    // Send an immediate notification with simplified options
+    console.log('Scheduling immediate notification...');
     await LocalNotifications.schedule({
       notifications: [
         {
           id: notificationId,
           title: 'Test Notification',
           body: 'This is a test notification from Lifted app!',
-          sound: 'default',
-          smallIcon: 'ic_stat_icon_config_sample',
-          largeIcon: 'ic_stat_icon_config_sample',
-          ongoing: false,
-          autoCancel: true,
+          schedule: { at: new Date(Date.now() + 1000) }, // Schedule for 1 second in the future instead of immediately
+          sound: null, // Try without sound to see if that's causing issues
         }
       ]
     });

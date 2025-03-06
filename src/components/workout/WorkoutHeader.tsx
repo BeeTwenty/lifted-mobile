@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 import WorkoutTimer from "./WorkoutTimer";
 import { checkNotificationsSupport, sendTestNotification } from "@/services/NotificationService";
 import { toast } from "sonner";
+import { Capacitor } from "@capacitor/core";
 
 interface WorkoutHeaderProps {
   title: string;
@@ -26,13 +27,15 @@ const WorkoutHeader = ({
 }: WorkoutHeaderProps) => {
   const navigate = useNavigate();
   const [notificationsSupported, setNotificationsSupported] = useState<boolean | null>(null);
+  const [isSendingNotification, setIsSendingNotification] = useState(false);
+  const isNative = Capacitor.isNativePlatform();
 
   useEffect(() => {
     const checkNotifications = async () => {
       const isSupported = await checkNotificationsSupport();
       setNotificationsSupported(isSupported);
       
-      if (!isSupported) {
+      if (!isSupported && isNative) {
         toast.info(
           "Enable notifications to get alerts when rest timers complete",
           {
@@ -43,25 +46,44 @@ const WorkoutHeader = ({
     };
     
     checkNotifications();
-  }, []);
+  }, [isNative]);
 
   const handleTestNotification = async () => {
     try {
+      setIsSendingNotification(true);
+      
+      if (!isNative) {
+        toast.info(
+          "Notifications are only available when running as a native app",
+          { 
+            description: "Try installing on a physical device or emulator",
+            duration: 5000,
+          }
+        );
+        setIsSendingNotification(false);
+        return;
+      }
+      
       const sent = await sendTestNotification();
       if (sent) {
         toast.success("Test notification sent!", {
-          description: "Please check your notification panel",
+          description: "Please check your notification panel in a moment",
           duration: 3000,
         });
       } else {
         toast.error("Failed to send notification", {
-          description: "Make sure notifications are enabled in your device settings",
+          description: "Please check app permissions in device settings",
           duration: 5000,
         });
       }
     } catch (error) {
       console.error("Error sending test notification:", error);
-      toast.error("Error sending notification");
+      toast.error("Error sending notification", {
+        description: "An unexpected error occurred",
+        duration: 3000,
+      });
+    } finally {
+      setIsSendingNotification(false);
     }
   };
 
@@ -93,9 +115,14 @@ const WorkoutHeader = ({
         size="sm" 
         className="self-end" 
         onClick={handleTestNotification}
+        disabled={isSendingNotification}
       >
-        <Bell className="h-4 w-4 mr-2" />
-        Test Notification
+        {isSendingNotification ? (
+          <span className="animate-spin mr-2">⟳</span>
+        ) : (
+          <Bell className="h-4 w-4 mr-2" />
+        )}
+        {isSendingNotification ? "Sending..." : "Test Notification"}
       </Button>
     </div>
   );

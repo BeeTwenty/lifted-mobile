@@ -26,7 +26,12 @@ const config: CapacitorConfig = {
       sound: "default",
       allowWhileIdle: true,
       importance: "high",
-      foreground: true
+      foreground: true,
+      createDefaultChannel: true,
+      pressAction: {
+        id: "default",
+        launchActivity: "MainActivity"
+      }
     }
   },
   bundledWebRuntime: false
