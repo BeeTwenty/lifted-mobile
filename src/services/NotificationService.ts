@@ -106,6 +106,51 @@ export const scheduleRestEndNotification = async (delay: number): Promise<number
 };
 
 /**
+ * Send an immediate test notification
+ * This is useful for testing notification permissions and delivery
+ */
+export const sendTestNotification = async (): Promise<boolean> => {
+  if (!Capacitor.isNativePlatform()) {
+    console.log('Notifications not supported in browser environment');
+    return false;
+  }
+
+  try {
+    console.log('Sending test notification...');
+    const permissionGranted = await checkNotificationsSupport();
+    if (!permissionGranted) {
+      console.log('Notification permission not granted');
+      return false;
+    }
+
+    // Generate a unique ID for this notification
+    const notificationId = new Date().getTime();
+    
+    // Send an immediate notification
+    await LocalNotifications.schedule({
+      notifications: [
+        {
+          id: notificationId,
+          title: 'Test Notification',
+          body: 'This is a test notification from Lifted app!',
+          sound: 'default',
+          smallIcon: 'ic_stat_icon_config_sample',
+          largeIcon: 'ic_stat_icon_config_sample',
+          ongoing: false,
+          autoCancel: true,
+        }
+      ]
+    });
+
+    console.log(`Test notification sent with ID: ${notificationId}`);
+    return true;
+  } catch (error) {
+    console.error('Error sending test notification:', error);
+    return false;
+  }
+};
+
+/**
  * Cancel a previously scheduled notification
  * @param notificationId The ID of the notification to cancel
  */
