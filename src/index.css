@@ -96,7 +96,7 @@
   
   /* Ensure inputs have proper contrast in dark mode */
   .dark input::placeholder {
-    @apply text-gray-400;
+    color: hsl(var(--muted-foreground) / 0.7);
   }
   
   /* Ensure proper contrast for inputs in dark mode */
@@ -125,11 +125,11 @@
   }
   
   .dark .text-gray-500 {
-    @apply text-muted-foreground;
+    color: hsl(var(--muted-foreground));
   }
   
   .dark .text-gray-400 {
-    @apply text-muted-foreground/70;
+    color: hsl(var(--muted-foreground) / 0.7);
   }
   
   .dark .bg-white {
