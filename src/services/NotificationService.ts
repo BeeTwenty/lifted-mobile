@@ -75,16 +75,21 @@ export const scheduleRestEndNotification = async (delay: number): Promise<number
     // Generate a unique ID for this notification
     const notificationId = new Date().getTime();
     
-    // Schedule the notification - explicitly set sound to default
+    // Schedule the notification with all possible options to ensure delivery
     await LocalNotifications.schedule({
       notifications: [
         {
           id: notificationId,
           title: 'Rest Complete',
           body: getRandomMessage(),
-          sound: 'default', // Explicitly use the default system sound
-          schedule: { at: new Date(Date.now() + delay * 1000) },
+          sound: 'default',
+          schedule: { 
+            at: new Date(Date.now() + delay * 1000),
+            allowWhileIdle: true,
+          },
           actionTypeId: 'WORKOUT_TIMER',
+          ongoing: false,
+          autoCancel: true,
           extra: {
             data: 'rest_timer_complete'
           }
@@ -127,9 +132,10 @@ export const registerNotificationChannel = async (): Promise<void> => {
         description: 'Notifications for workout rest timers',
         importance: 5, // High importance for timers
         visibility: 1,
-        sound: 'default', // Explicitly set to use default system sound
+        sound: 'default',
         vibration: true,
-        lights: true
+        lights: true,
+        lightColor: '#FF0000' // Red light for visibility
       });
       console.log('Android notification channel created');
     } catch (error) {
