@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -31,6 +32,7 @@ interface Exercise {
   order?: number;
   workout_id: string;
   rest_time: number | null;
+  media_url?: string;
 }
 
 const ExecuteWorkout = () => {
@@ -86,6 +88,7 @@ const ExecuteWorkout = () => {
         
         setWorkout(workoutData);
         
+        // Fetch exercises with their media URLs from exercise_templates
         const { data: exercisesData, error: exercisesError } = await supabase
           .from('exercises')
           .select('*')
@@ -94,14 +97,43 @@ const ExecuteWorkout = () => {
         
         if (exercisesError) throw exercisesError;
         
-        const sortedExercises = exercisesData ? [...exercisesData].sort((a, b) => {
-          // Handle undefined order values by treating them as largest (they go to the end)
-          const orderA = a.order !== undefined && a.order !== null ? a.order : Number.MAX_SAFE_INTEGER;
-          const orderB = b.order !== undefined && b.order !== null ? b.order : Number.MAX_SAFE_INTEGER;
-          return orderA - orderB;
-        }) : [];
-        
-        setExercises(sortedExercises);
+        // If we have exercises, fetch their media URLs
+        if (exercisesData && exercisesData.length > 0) {
+          // Get unique exercise names to query exercise_templates
+          const exerciseNames = [...new Set(exercisesData.map(exercise => exercise.name))];
+          
+          // Fetch media URLs for these exercise names
+          const { data: templateData, error: templateError } = await supabase
+            .from('exercise_templates')
+            .select('name, media_url')
+            .in('name', exerciseNames);
+          
+          if (templateError) throw templateError;
+          
+          // Create a lookup map for quick access to media URLs
+          const mediaUrlMap = templateData ? 
+            templateData.reduce((map, template) => {
+              map[template.name] = template.media_url;
+              return map;
+            }, {} as Record<string, string | null>) : {};
+          
+          // Add media URLs to exercise data
+          const exercisesWithMedia = exercisesData.map(exercise => ({
+            ...exercise,
+            media_url: mediaUrlMap[exercise.name] || undefined
+          }));
+          
+          // Sort by order (same as before)
+          const sortedExercises = [...exercisesWithMedia].sort((a, b) => {
+            const orderA = a.order !== undefined && a.order !== null ? a.order : Number.MAX_SAFE_INTEGER;
+            const orderB = b.order !== undefined && b.order !== null ? b.order : Number.MAX_SAFE_INTEGER;
+            return orderA - orderB;
+          });
+          
+          setExercises(sortedExercises);
+        } else {
+          setExercises([]);
+        }
       } catch (error: any) {
         console.error('Error fetching workout data:', error);
         toast.error('Failed to load workout');

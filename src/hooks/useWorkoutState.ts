@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -20,6 +21,7 @@ interface Exercise {
   order?: number;
   workout_id: string;
   rest_time: number | null;
+  media_url?: string;
 }
 
 export const useWorkoutState = (workout: Workout | null, exercises: Exercise[], userId: string | undefined) => {
