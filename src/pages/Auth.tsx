@@ -1,16 +1,18 @@
 
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useTheme } from "@/contexts/ThemeContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import { Navigate } from "react-router-dom";
-import { Dumbbell } from "lucide-react";
+import { Dumbbell, Moon, Sun } from "lucide-react";
 
 const Auth = () => {
   const { user, signIn, signUp, isLoading } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
@@ -30,13 +32,29 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-4">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-background p-4">
+      <div className="absolute top-4 right-4">
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          onClick={toggleTheme} 
+          className="text-foreground"
+        >
+          {theme === 'dark' ? (
+            <Sun className="h-5 w-5" />
+          ) : (
+            <Moon className="h-5 w-5" />
+          )}
+          <span className="sr-only">Toggle theme</span>
+        </Button>
+      </div>
+
       <div className="mb-8 text-center">
         <div className="flex items-center justify-center mb-2">
           <Dumbbell className="h-10 w-10 text-primary" />
         </div>
-        <h1 className="text-3xl font-bold">Lifted</h1>
-        <p className="text-gray-600">Track your workouts and achieve your goals</p>
+        <h1 className="text-3xl font-bold text-foreground">Lifted</h1>
+        <p className="text-muted-foreground">Track your workouts and achieve your goals</p>
       </div>
 
       <Card className="w-full max-w-md">
