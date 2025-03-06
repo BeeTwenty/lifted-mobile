@@ -82,7 +82,7 @@ export const scheduleRestEndNotification = async (delay: number): Promise<number
           id: notificationId,
           title: 'Rest Complete',
           body: getRandomMessage(),
-          sound: true,
+          sound: "notification.mp3",
           schedule: { at: new Date(Date.now() + delay * 1000) },
           actionTypeId: 'WORKOUT_TIMER',
           extra: {
@@ -127,7 +127,7 @@ export const registerNotificationChannel = async (): Promise<void> => {
         description: 'Notifications for workout rest timers',
         importance: 5,
         visibility: 1,
-        sound: 'notification.mp3',
+        sound: "notification.mp3",
         vibration: true,
         lights: true
       });
