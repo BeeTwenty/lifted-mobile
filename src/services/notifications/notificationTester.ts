@@ -1,6 +1,6 @@
 
 import { LocalNotifications } from '@capacitor/local-notifications';
-import { isNativePlatform, isAndroidPlatform } from './utils/platformUtils';
+import { isNativePlatform, isAndroidPlatform, logPlatformInfo } from './utils/platformUtils';
 import { registerNotificationChannel } from './notificationChannels';
 
 /**
@@ -9,10 +9,9 @@ import { registerNotificationChannel } from './notificationChannels';
  */
 export const sendTestNotification = async (): Promise<boolean> => {
   try {
-    // Log more information for debugging
+    // Log detailed information for debugging
+    logPlatformInfo();
     console.log('Testing notification support...');
-    console.log('Platform:', await import('@capacitor/core').then(m => m.Capacitor.getPlatform()));
-    console.log('Is native:', isNativePlatform());
 
     if (!isNativePlatform()) {
       console.log('Notifications not supported in browser environment');
@@ -37,25 +36,18 @@ export const sendTestNotification = async (): Promise<boolean> => {
 
     // Ensure the notification channel is created
     if (isAndroidPlatform()) {
-      const success = await registerNotificationChannel();
-      if (!success) {
-        console.error("Failed to create notification channel");
-        return false;
-      }
+      await registerNotificationChannel();
     }
 
     // Generate a unique ID for this notification
     const notificationId = new Date().getTime();
     
-    // Try immediate notification with minimal properties first
-    console.log('Scheduling immediate test notification with minimal properties...');
+    // Try multiple notification approaches in sequence until one works
     
+    // 1. Try immediate notification with minimal properties
     try {
-      // Delay for 1 second to ensure timing
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Send now
-      const scheduleResult = await LocalNotifications.schedule({
+      console.log('Attempting immediate basic notification...');
+      await LocalNotifications.schedule({
         notifications: [
           {
             id: notificationId,
@@ -64,33 +56,55 @@ export const sendTestNotification = async (): Promise<boolean> => {
           }
         ]
       });
-      
-      console.log("Schedule result:", scheduleResult);
-      console.log(`Test notification sent with ID: ${notificationId}`);
-      
+      console.log('Immediate basic notification sent');
       return true;
-    } catch (e) {
-      console.error("First notification attempt failed:", e);
+    } catch (error) {
+      console.warn('Basic notification failed:', error);
       
-      // Try with a delayed schedule as backup
+      // 2. Try with short delay (2 seconds)
       try {
-        console.log("Trying with delay and explicit channel...");
+        console.log('Attempting short-delay notification...');
+        const delayTime = new Date(Date.now() + 2000);
         await LocalNotifications.schedule({
           notifications: [
             {
               id: notificationId + 1,
-              title: 'Test Notification (Backup)',
-              body: 'This is a backup test notification!',
-              schedule: { at: new Date(Date.now() + 3000) },
-              channelId: 'workout-timer'
+              title: 'Test Notification (Delayed)',
+              body: 'This is a delayed test notification!',
+              schedule: { at: delayTime }
             }
           ]
         });
-        
-        console.log(`Backup notification scheduled with ID: ${notificationId + 1}`);
+        console.log('Short-delay notification scheduled');
         return true;
-      } catch (backupError) {
-        console.error("Backup notification failed:", backupError);
+      } catch (error2) {
+        console.warn('Short-delay notification failed:', error2);
+        
+        // 3. Try with Android-specific options
+        if (isAndroidPlatform()) {
+          try {
+            console.log('Attempting Android-specific notification...');
+            await LocalNotifications.schedule({
+              notifications: [
+                {
+                  id: notificationId + 2,
+                  title: 'Test Notification (Android)',
+                  body: 'Android test notification with channel',
+                  schedule: { at: new Date(Date.now() + 3000) },
+                  channelId: 'workout-timer',
+                  smallIcon: 'ic_stat_icon_config_sample',
+                  largeIcon: 'ic_stat_icon_config_sample',
+                  iconColor: '#488AFF'
+                }
+              ]
+            });
+            console.log('Android-specific notification scheduled');
+            return true;
+          } catch (error3) {
+            console.error('All notification attempts failed:', error3);
+            return false;
+          }
+        }
         return false;
       }
     }

@@ -1,6 +1,6 @@
 
 import { LocalNotifications } from '@capacitor/local-notifications';
-import { isNativePlatform, isAndroidPlatform } from './utils/platformUtils';
+import { isNativePlatform, isAndroidPlatform, logPlatformInfo } from './utils/platformUtils';
 import { getRandomMessage } from './utils/notificationMessages';
 import { registerNotificationChannel } from './notificationChannels';
 
@@ -16,6 +16,8 @@ export const scheduleRestEndNotification = async (delay: number): Promise<number
       return null;
     }
 
+    // Log detailed platform information
+    logPlatformInfo();
     console.log(`Attempting to schedule notification with delay: ${delay} seconds`);
     
     // Explicitly check permissions here
@@ -38,7 +40,8 @@ export const scheduleRestEndNotification = async (delay: number): Promise<number
     
     // Ensure the notification channel is created
     if (isAndroidPlatform()) {
-      await registerNotificationChannel();
+      const channelCreated = await registerNotificationChannel();
+      console.log(`Notification channel created/verified: ${channelCreated}`);
     }
     
     // Schedule the notification using a more direct approach
@@ -46,35 +49,57 @@ export const scheduleRestEndNotification = async (delay: number): Promise<number
       const scheduleTime = new Date(Date.now() + delay * 1000);
       console.log(`Scheduling notification for: ${scheduleTime.toISOString()}`);
       
-      await LocalNotifications.schedule({
+      // Create a simpler notification object first
+      const notificationConfig = {
         notifications: [
           {
             id: notificationId,
             title: 'Rest Complete',
             body: getRandomMessage(),
-            largeBody: "Your rest period is complete. Time to get back to your workout!",
-            summaryText: "Workout timer",
-            sound: null, // Using null lets Android use the default sound
-            smallIcon: 'ic_stat_icon_config_sample',
-            largeIcon: 'ic_stat_icon_config_sample',
-            iconColor: '#488AFF',
-            attachments: null,
-            actionTypeId: null,
-            extra: null,
             schedule: { 
               at: scheduleTime,
               allowWhileIdle: true,
             },
-            channelId: 'workout-timer'
+            // Only add these properties for Android
+            ...(isAndroidPlatform() ? {
+              largeBody: "Your rest period is complete. Time to get back to your workout!",
+              summaryText: "Workout timer",
+              smallIcon: 'ic_stat_icon_config_sample',
+              largeIcon: 'ic_stat_icon_config_sample',
+              iconColor: '#488AFF',
+              channelId: 'workout-timer'
+            } : {})
           }
         ]
-      });
+      };
+      
+      console.log('Notification config:', JSON.stringify(notificationConfig, null, 2));
+      await LocalNotifications.schedule(notificationConfig);
 
       console.log(`Notification scheduled with ID: ${notificationId}`);
       return notificationId;
     } catch (e) {
       console.error("Error scheduling notification:", e);
-      return null;
+      
+      // Try a fallback method with fewer options if the first approach failed
+      try {
+        console.log("Attempting fallback notification scheduling...");
+        await LocalNotifications.schedule({
+          notifications: [
+            {
+              id: notificationId,
+              title: 'Rest Complete',
+              body: getRandomMessage(),
+              schedule: { at: new Date(Date.now() + delay * 1000) }
+            }
+          ]
+        });
+        console.log(`Fallback notification scheduled with ID: ${notificationId}`);
+        return notificationId;
+      } catch (fallbackError) {
+        console.error("Fallback notification also failed:", fallbackError);
+        return null;
+      }
     }
   } catch (error) {
     console.error('Error scheduling notification:', error);

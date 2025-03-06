@@ -1,7 +1,7 @@
 
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Bell } from "lucide-react";
+import { ArrowLeft, Bell, AlertTriangle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import WorkoutTimer from "./WorkoutTimer";
 import { checkNotificationsSupport, sendTestNotification } from "@/services/notifications";
@@ -29,19 +29,35 @@ const WorkoutHeader = ({
   const [notificationsSupported, setNotificationsSupported] = useState<boolean | null>(null);
   const [isSendingNotification, setIsSendingNotification] = useState(false);
   const isNative = Capacitor.isNativePlatform();
+  const [notificationAttempts, setNotificationAttempts] = useState(0);
 
   useEffect(() => {
     const checkNotifications = async () => {
-      const isSupported = await checkNotificationsSupport();
-      setNotificationsSupported(isSupported);
-      
-      if (!isSupported && isNative) {
-        toast.info(
-          "Enable notifications to get alerts when rest timers complete",
-          {
-            duration: 5000,
-          }
-        );
+      try {
+        console.log("Checking notification permissions in WorkoutHeader");
+        const isSupported = await checkNotificationsSupport();
+        setNotificationsSupported(isSupported);
+        
+        if (!isSupported && isNative) {
+          console.log("Notifications not supported but on native platform");
+          toast.info(
+            "Notifications not working. Please check app permissions",
+            {
+              duration: 5000,
+              action: {
+                label: "Open Settings",
+                onClick: () => {
+                  console.log("User clicked to open settings");
+                  // This would ideally open device settings, but we'll just log it
+                }
+              }
+            }
+          );
+        } else if (isSupported) {
+          console.log("Notifications are supported and permissions granted");
+        }
+      } catch (error) {
+        console.error("Error checking notification support:", error);
       }
     };
     
@@ -51,6 +67,7 @@ const WorkoutHeader = ({
   const handleTestNotification = async () => {
     try {
       setIsSendingNotification(true);
+      setNotificationAttempts(prev => prev + 1);
       
       if (!isNative) {
         toast.info(
@@ -67,7 +84,6 @@ const WorkoutHeader = ({
       console.log("Testing notification delivery...");
       toast.loading("Sending notification...", { id: "notification-test" });
       
-      // Send multiple test notifications in case one approach works better
       const sent = await sendTestNotification();
       
       if (sent) {
@@ -79,11 +95,21 @@ const WorkoutHeader = ({
         console.log("Test notification scheduled successfully");
       } else {
         console.error("Failed to send notification");
-        toast.error("Failed to send notification", {
-          id: "notification-test",
-          description: "Please check app permissions in device settings",
-          duration: 5000,
-        });
+        
+        // Different messages based on attempts
+        if (notificationAttempts > 1) {
+          toast.error("Still having issues with notifications", {
+            id: "notification-test",
+            description: "Try restarting the app or reinstalling",
+            duration: 5000,
+          });
+        } else {
+          toast.error("Failed to send notification", {
+            id: "notification-test",
+            description: "Please check app permissions in device settings",
+            duration: 5000,
+          });
+        }
       }
     } catch (error) {
       console.error("Error sending test notification:", error);
@@ -125,16 +151,18 @@ const WorkoutHeader = ({
       <Button 
         variant="outline" 
         size="sm" 
-        className="self-end flex items-center gap-2" 
+        className={`self-end flex items-center gap-2 ${notificationsSupported === false ? 'border-yellow-500' : ''}`}
         onClick={handleTestNotification}
         disabled={isSendingNotification}
       >
         {isSendingNotification ? (
           <span className="animate-spin">⟳</span>
+        ) : notificationsSupported === false ? (
+          <AlertTriangle className="h-4 w-4 text-yellow-500" />
         ) : (
           <Bell className="h-4 w-4" />
         )}
-        {isSendingNotification ? "Sending..." : "Test Notification"}
+        {isSendingNotification ? "Sending..." : notificationsSupported === false ? "Fix Notifications" : "Test Notification"}
       </Button>
     </div>
   );

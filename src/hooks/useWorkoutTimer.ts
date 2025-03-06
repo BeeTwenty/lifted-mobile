@@ -19,9 +19,13 @@ export const useWorkoutTimer = (initialRunningState = false) => {
   // Store the timestamp when the timer was started/paused to account for background time
   const lastTimestampRef = useRef<number>(Date.now());
   const restStartTimestampRef = useRef<number | null>(null);
+  
+  // Track notification scheduling attempts
+  const notificationAttemptedRef = useRef<boolean>(false);
 
   // Initialize notifications when hook is first used
   useEffect(() => {
+    console.log('Initializing notifications in useWorkoutTimer');
     initializeNotifications();
   }, []);
 
@@ -54,19 +58,23 @@ export const useWorkoutTimer = (initialRunningState = false) => {
     };
   }, [isRunning]);
 
-  // Background-aware timer for rest periods
+  // Background-aware timer for rest periods with improved notification handling
   useEffect(() => {
     if (restTimeRemaining !== null && restTimeRemaining > 0) {
       // Schedule notification when rest timer starts
-      if (restTimeRemaining && notificationIdRef.current === null) {
+      if (restTimeRemaining && !notificationAttemptedRef.current) {
         console.log(`Scheduling notification for rest timer: ${restTimeRemaining} seconds`);
+        notificationAttemptedRef.current = true;
+        
         scheduleRestEndNotification(restTimeRemaining).then(id => {
           if (id) {
             console.log(`Notification scheduled with ID: ${id}`);
             notificationIdRef.current = id;
           } else {
-            console.log('Failed to schedule notification');
+            console.log('Failed to schedule notification, will rely on in-app timer');
           }
+        }).catch(err => {
+          console.error('Error scheduling notification:', err);
         });
         
         // Set the start timestamp for the rest period
@@ -95,6 +103,7 @@ export const useWorkoutTimer = (initialRunningState = false) => {
           // Reset the rest timer
           setRestTimeRemaining(null);
           restStartTimestampRef.current = null;
+          notificationAttemptedRef.current = false;
         } else {
           restTimerRef.current = window.setTimeout(updateRestTimer, 1000);
         }
@@ -107,12 +116,15 @@ export const useWorkoutTimer = (initialRunningState = false) => {
       // Cancel notification if rest timer was manually skipped or completed
       if (notificationIdRef.current !== null) {
         console.log(`Cancelling notification with ID: ${notificationIdRef.current}`);
-        cancelNotification(notificationIdRef.current);
+        cancelNotification(notificationIdRef.current).catch(err => {
+          console.error('Error cancelling notification:', err);
+        });
         notificationIdRef.current = null;
       }
       
-      // Reset the rest timer start timestamp
+      // Reset the rest timer start timestamp and notification attempt flag
       restStartTimestampRef.current = null;
+      notificationAttemptedRef.current = false;
     }
 
     return () => {
@@ -123,8 +135,14 @@ export const useWorkoutTimer = (initialRunningState = false) => {
       // Clean up notification when component unmounts
       if (notificationIdRef.current !== null) {
         console.log(`Cleaning up notification with ID: ${notificationIdRef.current}`);
-        cancelNotification(notificationIdRef.current);
+        cancelNotification(notificationIdRef.current).catch(err => {
+          console.error('Error cancelling notification on cleanup:', err);
+        });
+        notificationIdRef.current = null;
       }
+      
+      // Reset notification attempt flag
+      notificationAttemptedRef.current = false;
     };
   }, [restTimeRemaining]);
 
@@ -176,9 +194,15 @@ export const useWorkoutTimer = (initialRunningState = false) => {
       if (!Capacitor.isNativePlatform()) {
         const audio = new Audio('/notification.mp3');
         audio.play().catch(e => console.log('Audio play failed:', e));
+      } else {
+        console.log('Using native notification sound instead of in-app sound');
       }
     } catch (error) {
       console.error('Error playing timer completion sound:', error);
+      // Fallback to basic browser alert if sound fails
+      if (!Capacitor.isNativePlatform()) {
+        console.log('Rest timer complete!');
+      }
     }
   };
 
