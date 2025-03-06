@@ -29,6 +29,8 @@ interface Exercise {
   weight?: number;
   notes?: string;
   order?: number;
+  workout_id: string;
+  rest_time: number;
 }
 
 const ExecuteWorkout = () => {
