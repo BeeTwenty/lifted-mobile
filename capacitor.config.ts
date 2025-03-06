@@ -19,6 +19,13 @@ const config: CapacitorConfig = {
       signingType: 'apksigner'
     }
   },
+  plugins: {
+    LocalNotifications: {
+      smallIcon: "ic_stat_icon_config_sample",
+      iconColor: "#488AFF",
+      sound: "notification.mp3",
+    },
+  },
   bundledWebRuntime: false
 };
 
