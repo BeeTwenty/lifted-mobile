@@ -9,6 +9,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import Auth from "@/pages/Auth";
 import Dashboard from "@/pages/Dashboard";
 import CreateWorkout from "@/pages/CreateWorkout";
+import ExecuteWorkout from "@/pages/ExecuteWorkout";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -27,6 +28,7 @@ const App = () => (
             <Route element={<ProtectedRoute />}>
               <Route path="/" element={<Dashboard />} />
               <Route path="/create-workout" element={<CreateWorkout />} />
+              <Route path="/execute-workout/:id" element={<ExecuteWorkout />} />
               {/* Add more protected routes here */}
             </Route>
             

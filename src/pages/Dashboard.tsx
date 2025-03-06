@@ -54,21 +54,9 @@ const Dashboard = () => {
     fetchWorkoutRoutines();
   }, [user]);
 
-  // Count the number of exercises for each workout routine
-  const fetchExerciseCount = async (workoutId: string) => {
-    try {
-      const { count, error } = await supabase
-        .from('exercises')
-        .select('*', { count: 'exact', head: true })
-        .eq('workout_id', workoutId);
-      
-      if (error) throw error;
-      
-      return count || 0;
-    } catch (error) {
-      console.error('Error counting exercises:', error);
-      return 0;
-    }
+  // Navigate to workout execution page
+  const startWorkout = (id: string) => {
+    navigate(`/execute-workout/${id}`);
   };
 
   return (
@@ -104,7 +92,11 @@ const Dashboard = () => {
         ) : (
           <div className="space-y-3">
             {workoutRoutines.map((routine) => (
-              <Card key={routine.id} className="cursor-pointer hover:shadow-md transition-shadow">
+              <Card 
+                key={routine.id} 
+                className="cursor-pointer hover:shadow-md transition-shadow"
+                onClick={() => startWorkout(routine.id)}
+              >
                 <CardContent className="p-4">
                   <div className="flex justify-between items-center">
                     <div>
