@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -11,6 +12,7 @@ import CreateWorkout from "@/pages/CreateWorkout";
 import ExecuteWorkout from "@/pages/ExecuteWorkout";
 import NotFound from "./pages/NotFound";
 import EditWorkout from "./pages/EditWorkout";
+import WeightTracker from "./pages/WeightTracker";
 
 const queryClient = new QueryClient();
 
@@ -29,6 +31,7 @@ const App = () => (
               <Route path="/create-workout" element={<CreateWorkout />} />
               <Route path="/edit-workout/:id" element={<EditWorkout />} />
               <Route path="/execute-workout/:id" element={<ExecuteWorkout />} />
+              <Route path="/weight-tracker" element={<WeightTracker />} />
             </Route>
             
             <Route path="*" element={<NotFound />} />
