@@ -1,5 +1,6 @@
 
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import NavBar from "@/components/NavBar";
 import { Button } from "@/components/ui/button";
 import { Plus, Dumbbell } from "lucide-react";
@@ -23,6 +24,7 @@ const Dashboard = () => {
   const [workoutRoutines, setWorkoutRoutines] = useState<WorkoutRoutine[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     // Fetch workout routines from Supabase when the component mounts
@@ -75,7 +77,11 @@ const Dashboard = () => {
       <main className="max-w-md mx-auto px-4 py-6">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-xl font-semibold">My Workout Routines</h1>
-          <Button size="sm" className="flex items-center gap-1">
+          <Button 
+            size="sm" 
+            className="flex items-center gap-1"
+            onClick={() => navigate("/create-workout")}
+          >
             <Plus size={18} />
             New
           </Button>
@@ -90,7 +96,7 @@ const Dashboard = () => {
             <Dumbbell className="h-12 w-12 text-gray-300 mx-auto mb-3" />
             <p className="text-gray-500">No workout routines yet</p>
             <p className="text-gray-400 text-sm mb-4">Create your first routine to get started</p>
-            <Button>
+            <Button onClick={() => navigate("/create-workout")}>
               <Plus className="mr-2" size={16} />
               Create Routine
             </Button>

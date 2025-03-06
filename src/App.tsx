@@ -8,6 +8,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import Auth from "@/pages/Auth";
 import Dashboard from "@/pages/Dashboard";
+import CreateWorkout from "@/pages/CreateWorkout";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -25,6 +26,7 @@ const App = () => (
             {/* Protected routes - require authentication */}
             <Route element={<ProtectedRoute />}>
               <Route path="/" element={<Dashboard />} />
+              <Route path="/create-workout" element={<CreateWorkout />} />
               {/* Add more protected routes here */}
             </Route>
             
