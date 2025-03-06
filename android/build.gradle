@@ -25,6 +25,7 @@ allprojects {
     }
 }
 
-task clean(type: Delete) {
+// Update the deprecated Delete task to use the newer Delete.delete method
+tasks.register('clean', Delete) {
     delete rootProject.buildDir
 }
