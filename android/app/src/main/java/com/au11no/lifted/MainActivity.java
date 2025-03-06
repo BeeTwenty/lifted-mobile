@@ -1,3 +1,4 @@
+
 package com.au11no.lifted;
 
 import com.getcapacitor.BridgeActivity;
@@ -24,6 +25,7 @@ public class MainActivity extends BridgeActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        registerPlugins();
         super.onCreate(savedInstanceState);
         Log.d(TAG, "MainActivity onCreate");
 
