@@ -35,14 +35,14 @@ const BMICalculator = ({ weight, height }: BMICalculatorProps) => {
       <CardContent className="pt-6">
         <div className="flex justify-between items-start">
           <div>
-            <h3 className="text-lg font-semibold">Your BMI</h3>
+            <h3 className="text-lg font-semibold text-card-foreground">Your BMI</h3>
             <p className={`text-2xl font-bold ${color}`}>
               {roundedBmi}
-              <span className="text-sm font-normal text-gray-500 ml-1">kg/m²</span>
+              <span className="text-sm font-normal text-muted-foreground ml-1">kg/m²</span>
             </p>
             <p className={`${color} font-medium`}>{category}</p>
           </div>
-          <div className="text-sm text-gray-500 text-right">
+          <div className="text-sm text-muted-foreground text-right">
             <p>Underweight: &lt;18.5</p>
             <p>Normal: 18.5-24.9</p>
             <p>Overweight: 25-29.9</p>

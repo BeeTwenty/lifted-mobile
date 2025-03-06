@@ -22,27 +22,27 @@ const WeightHistory = ({ weightRecords, isLoading, onDelete }: WeightHistoryProp
   if (weightRecords.length === 0) {
     return (
       <div className="text-center py-8">
-        <p className="text-gray-500">No weight records yet</p>
-        <p className="text-gray-400 text-sm">Add your first weight record above</p>
+        <p className="text-muted-foreground">No weight records yet</p>
+        <p className="text-muted-foreground/80 text-sm">Add your first weight record above</p>
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-      <h2 className="text-lg font-medium p-4 border-b">Weight History</h2>
-      <div className="divide-y">
+    <div className="bg-card rounded-lg shadow-sm overflow-hidden">
+      <h2 className="text-lg font-medium p-4 border-b text-card-foreground">Weight History</h2>
+      <div className="divide-y divide-border">
         {weightRecords.map((record) => (
           <div key={record.id} className="flex justify-between items-center p-4">
             <div>
-              <p className="font-medium">{format(parseISO(record.date), "MMM d, yyyy")}</p>
+              <p className="font-medium text-card-foreground">{format(parseISO(record.date), "MMM d, yyyy")}</p>
             </div>
             <div className="flex items-center gap-4">
-              <p className="font-medium">{record.weight} kg</p>
+              <p className="font-medium text-card-foreground">{record.weight} kg</p>
               <Button 
                 variant="ghost" 
                 size="icon"
-                className="text-gray-500 hover:text-red-500" 
+                className="text-muted-foreground hover:text-destructive" 
                 onClick={() => onDelete(record.id)}
               >
                 <Trash size={18} />

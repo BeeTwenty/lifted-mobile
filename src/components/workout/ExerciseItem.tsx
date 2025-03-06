@@ -57,7 +57,7 @@ const ExerciseItem = ({
               <span className="sr-only">Move down</span>
             </Button>
           </div>
-          <h3 className="font-medium">{exercise.name}</h3>
+          <h3 className="font-medium text-foreground">{exercise.name}</h3>
         </div>
         <Button 
           variant="ghost" 
@@ -71,7 +71,7 @@ const ExerciseItem = ({
       </div>
       <div className="grid grid-cols-2 gap-2">
         <div>
-          <Label htmlFor={`sets-${exercise.id}`}>Sets</Label>
+          <Label htmlFor={`sets-${exercise.id}`} className="text-foreground">Sets</Label>
           <Input
             id={`sets-${exercise.id}`}
             type="number"
@@ -82,7 +82,7 @@ const ExerciseItem = ({
           />
         </div>
         <div>
-          <Label htmlFor={`reps-${exercise.id}`}>Reps</Label>
+          <Label htmlFor={`reps-${exercise.id}`} className="text-foreground">Reps</Label>
           <Input
             id={`reps-${exercise.id}`}
             type="number"
@@ -93,7 +93,7 @@ const ExerciseItem = ({
           />
         </div>
         <div>
-          <Label htmlFor={`weight-${exercise.id}`}>Weight (optional)</Label>
+          <Label htmlFor={`weight-${exercise.id}`} className="text-foreground">Weight (optional)</Label>
           <Input
             id={`weight-${exercise.id}`}
             type="number"
@@ -106,7 +106,7 @@ const ExerciseItem = ({
           />
         </div>
         <div>
-          <Label htmlFor={`notes-${exercise.id}`}>Notes</Label>
+          <Label htmlFor={`notes-${exercise.id}`} className="text-foreground">Notes</Label>
           <Input
             id={`notes-${exercise.id}`}
             value={exercise.notes || ''}
