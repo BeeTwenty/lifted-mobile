@@ -16,9 +16,10 @@ interface ExerciseTemplate {
 
 interface ExerciseSearchProps {
   onSelectExercise: (exercise: { id: string; name: string }) => void;
+  selectedExercises?: { id: string; name: string }[];
 }
 
-const ExerciseSearch = ({ onSelectExercise }: ExerciseSearchProps) => {
+const ExerciseSearch = ({ onSelectExercise, selectedExercises = [] }: ExerciseSearchProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<ExerciseTemplate[]>([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -55,6 +56,10 @@ const ExerciseSearch = ({ onSelectExercise }: ExerciseSearchProps) => {
     if (e.key === 'Enter') {
       handleSearch();
     }
+  };
+
+  const isExerciseSelected = (id: string) => {
+    return selectedExercises.some(ex => ex.id === id);
   };
 
   return (
@@ -102,9 +107,10 @@ const ExerciseSearch = ({ onSelectExercise }: ExerciseSearchProps) => {
                   </div>
                   <Button
                     size="sm"
-                    variant="ghost"
+                    variant={isExerciseSelected(exercise.id) ? "secondary" : "ghost"}
                     className="h-8 w-8 p-0 rounded-full"
                     onClick={() => onSelectExercise({ id: exercise.id, name: exercise.name })}
+                    disabled={isExerciseSelected(exercise.id)}
                   >
                     <Plus className="h-4 w-4" />
                     <span className="sr-only">Add</span>

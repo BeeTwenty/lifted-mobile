@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
-import { Dumbbell, ArrowLeft, Plus } from "lucide-react";
+import { Dumbbell, ArrowLeft, Plus, GripVertical, ChevronUp, ChevronDown, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -45,6 +45,27 @@ const CreateWorkout = () => {
         ex.id === id ? { ...ex, [field]: value } : ex
       )
     );
+  };
+
+  const moveExercise = (id: string, direction: 'up' | 'down') => {
+    const index = selectedExercises.findIndex(ex => ex.id === id);
+    if (
+      (direction === 'up' && index === 0) || 
+      (direction === 'down' && index === selectedExercises.length - 1)
+    ) {
+      return;
+    }
+
+    const newExercises = [...selectedExercises];
+    const newIndex = direction === 'up' ? index - 1 : index + 1;
+    const exerciseToMove = newExercises[index];
+    
+    // Remove the exercise from its current position
+    newExercises.splice(index, 1);
+    // Insert it at the new position
+    newExercises.splice(newIndex, 0, exerciseToMove);
+    
+    setSelectedExercises(newExercises);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -159,22 +180,49 @@ const CreateWorkout = () => {
           
           <div className="space-y-2">
             <h2 className="text-lg font-medium">Exercises</h2>
-            <ExerciseSearch onSelectExercise={addExercise} />
+            <ExerciseSearch 
+              onSelectExercise={addExercise} 
+              selectedExercises={selectedExercises}
+            />
             
             {selectedExercises.length > 0 ? (
               <div className="space-y-3 mt-4">
-                {selectedExercises.map((exercise) => (
+                {selectedExercises.map((exercise, index) => (
                   <Card key={exercise.id} className="p-3">
                     <div className="flex justify-between items-center mb-2">
-                      <h3 className="font-medium">{exercise.name}</h3>
+                      <div className="flex items-center space-x-2">
+                        <div className="flex flex-col">
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            className="h-6 w-6 p-0" 
+                            onClick={() => moveExercise(exercise.id, 'up')}
+                            disabled={index === 0}
+                          >
+                            <ChevronUp className="h-4 w-4" />
+                            <span className="sr-only">Move up</span>
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            className="h-6 w-6 p-0" 
+                            onClick={() => moveExercise(exercise.id, 'down')}
+                            disabled={index === selectedExercises.length - 1}
+                          >
+                            <ChevronDown className="h-4 w-4" />
+                            <span className="sr-only">Move down</span>
+                          </Button>
+                        </div>
+                        <h3 className="font-medium">{exercise.name}</h3>
+                      </div>
                       <Button 
                         variant="ghost" 
                         size="sm"
-                        className="h-8 w-8 p-0" 
+                        className="h-8 w-8 p-0 text-destructive hover:text-destructive/90" 
                         onClick={() => removeExercise(exercise.id)}
                       >
+                        <Trash2 className="h-4 w-4" />
                         <span className="sr-only">Remove</span>
-                        <span aria-hidden="true">×</span>
                       </Button>
                     </div>
                     <div className="grid grid-cols-2 gap-2">
