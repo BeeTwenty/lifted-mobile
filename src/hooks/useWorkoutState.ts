@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -65,7 +64,12 @@ export const useWorkoutState = (workout: Workout | null, exercises: Exercise[], 
     }
   };
 
-  const updateExerciseWeight = (exerciseId: string, newWeight: number, exercisesData: Exercise[], setExercisesData: React.Dispatch<React.SetStateAction<Exercise[]>>) => {
+  const updateExerciseWeight = (
+    exerciseId: string, 
+    newWeight: number, 
+    exercisesData: Exercise[], 
+    setExercisesData: React.Dispatch<React.SetStateAction<Exercise[]>>
+  ) => {
     setExercisesData(exercisesData.map(exercise => 
       exercise.id === exerciseId 
         ? { ...exercise, weight: newWeight } 
