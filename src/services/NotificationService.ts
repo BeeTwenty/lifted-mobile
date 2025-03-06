@@ -94,31 +94,41 @@ export const scheduleRestEndNotification = async (delay: number): Promise<number
       await registerNotificationChannel();
     }
     
-    // Schedule the notification with all possible options to ensure delivery
-    await LocalNotifications.schedule({
-      notifications: [
-        {
-          id: notificationId,
-          title: 'Rest Complete',
-          body: getRandomMessage(),
-          sound: 'default',
-          schedule: { 
-            at: new Date(Date.now() + delay * 1000),
-            allowWhileIdle: true,
-          },
-          actionTypeId: 'WORKOUT_TIMER',
-          channelId: 'workout-timer',
-          ongoing: false,
-          autoCancel: true,
-          extra: {
-            data: 'rest_timer_complete'
+    // Schedule the notification using a more direct approach
+    try {
+      const scheduleTime = new Date(Date.now() + delay * 1000);
+      console.log(`Scheduling notification for: ${scheduleTime.toISOString()}`);
+      
+      await LocalNotifications.schedule({
+        notifications: [
+          {
+            id: notificationId,
+            title: 'Rest Complete',
+            body: getRandomMessage(),
+            largeBody: "Your rest period is complete. Time to get back to your workout!",
+            summaryText: "Workout timer",
+            sound: null, // Using null lets Android use the default sound
+            smallIcon: 'ic_stat_icon_config_sample',
+            largeIcon: 'ic_stat_icon_config_sample',
+            iconColor: '#488AFF',
+            attachments: null,
+            actionTypeId: null,
+            extra: null,
+            schedule: { 
+              at: scheduleTime,
+              allowWhileIdle: true,
+            },
+            channelId: 'workout-timer'
           }
-        }
-      ]
-    });
+        ]
+      });
 
-    console.log(`Notification scheduled with ID: ${notificationId}`);
-    return notificationId;
+      console.log(`Notification scheduled with ID: ${notificationId}`);
+      return notificationId;
+    } catch (e) {
+      console.error("Error scheduling notification:", e);
+      return null;
+    }
   } catch (error) {
     console.error('Error scheduling notification:', error);
     return null;
@@ -159,46 +169,63 @@ export const sendTestNotification = async (): Promise<boolean> => {
 
     // Ensure the notification channel is created
     if (Capacitor.getPlatform() === 'android') {
-      await registerNotificationChannel();
+      const success = await registerNotificationChannel();
+      if (!success) {
+        console.error("Failed to create notification channel");
+        return false;
+      }
     }
 
     // Generate a unique ID for this notification
     const notificationId = new Date().getTime();
     
-    // Send an immediate notification
-    console.log('Scheduling immediate test notification...');
+    // Try immediate notification with minimal properties first
+    console.log('Scheduling immediate test notification with minimal properties...');
     
-    // First, get all pending notifications
-    const pendingNotifications = await LocalNotifications.getPending();
-    console.log('Pending notifications:', pendingNotifications);
-    
-    // Schedule the notification for 2 seconds in the future
-    // This helps ensure the notification is actually delivered
-    await LocalNotifications.schedule({
-      notifications: [
-        {
-          id: notificationId,
-          title: 'Test Notification',
-          body: 'This is a test notification from Lifted app!',
-          schedule: { at: new Date(Date.now() + 2000) },
-          sound: 'default',
-          channelId: 'workout-timer',
-          ongoing: false,
-          smallIcon: 'ic_stat_icon_config_sample',
-          iconColor: '#488AFF',
-        }
-      ]
-    });
-
-    console.log(`Test notification sent with ID: ${notificationId}`);
-    
-    // Return list of registered notification channels
-    if (Capacitor.getPlatform() === 'android') {
-      const channels = await LocalNotifications.listChannels();
-      console.log('Available notification channels:', channels);
+    try {
+      // Delay for 1 second to ensure timing
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Send now
+      const scheduleResult = await LocalNotifications.schedule({
+        notifications: [
+          {
+            id: notificationId,
+            title: 'Test Notification',
+            body: 'This is a test notification from Lifted app!',
+          }
+        ]
+      });
+      
+      console.log("Schedule result:", scheduleResult);
+      console.log(`Test notification sent with ID: ${notificationId}`);
+      
+      return true;
+    } catch (e) {
+      console.error("First notification attempt failed:", e);
+      
+      // Try with a delayed schedule as backup
+      try {
+        console.log("Trying with delay and explicit channel...");
+        await LocalNotifications.schedule({
+          notifications: [
+            {
+              id: notificationId + 1,
+              title: 'Test Notification (Backup)',
+              body: 'This is a backup test notification!',
+              schedule: { at: new Date(Date.now() + 3000) },
+              channelId: 'workout-timer'
+            }
+          ]
+        });
+        
+        console.log(`Backup notification scheduled with ID: ${notificationId + 1}`);
+        return true;
+      } catch (backupError) {
+        console.error("Backup notification failed:", backupError);
+        return false;
+      }
     }
-    
-    return true;
   } catch (error) {
     console.error('Error sending test notification:', error);
     return false;
@@ -223,30 +250,50 @@ export const cancelNotification = async (notificationId: number): Promise<void> 
 };
 
 // Register notification channel for Android
-export const registerNotificationChannel = async (): Promise<void> => {
+export const registerNotificationChannel = async (): Promise<boolean> => {
   if (Capacitor.getPlatform() === 'android') {
     try {
       console.log('Creating notification channel for Android...');
+      
+      // First try to delete any existing channel
+      try {
+        const channels = await LocalNotifications.listChannels();
+        for (const channel of channels.channels) {
+          if (channel.id === 'workout-timer') {
+            console.log(`Deleting existing channel: ${channel.id}`);
+            await LocalNotifications.deleteChannel({ id: channel.id });
+          }
+        }
+      } catch (e) {
+        console.log('Error checking existing channels:', e);
+      }
+      
+      // Now create a new channel
       await LocalNotifications.createChannel({
         id: 'workout-timer',
         name: 'Workout Timer',
         description: 'Notifications for workout rest timers',
         importance: 5, // High importance for timers
         visibility: 1,
-        sound: 'default',
+        sound: null, // Let Android use default sound
         vibration: true,
         lights: true,
         lightColor: '#FF0000' // Red light for visibility
       });
+      
       console.log('Android notification channel created successfully');
       
       // List channels to verify
       const channels = await LocalNotifications.listChannels();
       console.log('Available notification channels:', channels);
+      
+      return channels.channels.some(channel => channel.id === 'workout-timer');
     } catch (error) {
       console.error('Error creating notification channel:', error);
+      return false;
     }
   }
+  return true; // Return true for non-Android platforms
 };
 
 // Initialize notifications
@@ -273,6 +320,12 @@ export const initializeNotifications = async (): Promise<void> => {
       // Pre-check permissions on initialization
       const permissionStatus = await LocalNotifications.checkPermissions();
       console.log('Initial notification permission status:', permissionStatus);
+      
+      // If not granted, immediately request
+      if (permissionStatus.display !== 'granted') {
+        const requestResult = await LocalNotifications.requestPermissions();
+        console.log('Permission request result:', requestResult);
+      }
     } catch (error) {
       console.error('Error initializing notifications:', error);
     }

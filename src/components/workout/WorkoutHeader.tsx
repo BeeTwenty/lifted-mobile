@@ -65,10 +65,14 @@ const WorkoutHeader = ({
       }
       
       console.log("Testing notification delivery...");
+      toast.loading("Sending notification...", { id: "notification-test" });
+      
+      // Send multiple test notifications in case one approach works better
       const sent = await sendTestNotification();
       
       if (sent) {
         toast.success("Test notification sent!", {
+          id: "notification-test",
           description: "Please check your notification panel in a moment",
           duration: 3000,
         });
@@ -76,6 +80,7 @@ const WorkoutHeader = ({
       } else {
         console.error("Failed to send notification");
         toast.error("Failed to send notification", {
+          id: "notification-test",
           description: "Please check app permissions in device settings",
           duration: 5000,
         });
@@ -83,6 +88,7 @@ const WorkoutHeader = ({
     } catch (error) {
       console.error("Error sending test notification:", error);
       toast.error("Error sending notification", {
+        id: "notification-test",
         description: "An unexpected error occurred",
         duration: 3000,
       });
