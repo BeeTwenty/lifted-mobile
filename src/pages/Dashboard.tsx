@@ -4,10 +4,10 @@ import { useNavigate } from "react-router-dom";
 import NavBar from "@/components/NavBar";
 import { Button } from "@/components/ui/button";
 import { Plus, Dumbbell } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import WorkoutCard from "@/components/workout/WorkoutCard";
 
 // Define the workout routine type based on what we're getting from the database
 interface WorkoutRoutine {
@@ -54,9 +54,9 @@ const Dashboard = () => {
     fetchWorkoutRoutines();
   }, [user]);
 
-  // Navigate to workout execution page
-  const startWorkout = (id: string) => {
-    navigate(`/execute-workout/${id}`);
+  const handleDeleteWorkout = (id: string) => {
+    // Update local state to remove the deleted workout
+    setWorkoutRoutines(workoutRoutines.filter(routine => routine.id !== id));
   };
 
   return (
@@ -92,23 +92,11 @@ const Dashboard = () => {
         ) : (
           <div className="space-y-3">
             {workoutRoutines.map((routine) => (
-              <Card 
+              <WorkoutCard 
                 key={routine.id} 
-                className="cursor-pointer hover:shadow-md transition-shadow"
-                onClick={() => startWorkout(routine.id)}
-              >
-                <CardContent className="p-4">
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <h3 className="font-medium">{routine.title}</h3>
-                      <p className="text-sm text-gray-500">
-                        {routine.duration} min • {new Date(routine.created_at).toLocaleDateString()}
-                      </p>
-                    </div>
-                    <Dumbbell className="h-5 w-5 text-primary" />
-                  </div>
-                </CardContent>
-              </Card>
+                routine={routine}
+                onDelete={handleDeleteWorkout}
+              />
             ))}
           </div>
         )}
