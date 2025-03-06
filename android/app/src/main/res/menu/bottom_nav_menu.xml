@@ -1,0 +1,20 @@
+
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/dashboardFragment"
+        android:icon="@drawable/ic_dashboard"
+        android:title="Dashboard" />
+    <item
+        android:id="@+id/workoutsFragment"
+        android:icon="@drawable/ic_workout"
+        android:title="Workouts" />
+    <item
+        android:id="@+id/weightTrackerFragment"
+        android:icon="@drawable/ic_weight"
+        android:title="Weight" />
+    <item
+        android:id="@+id/settingsFragment"
+        android:icon="@drawable/ic_settings"
+        android:title="Settings" />
+</menu>
