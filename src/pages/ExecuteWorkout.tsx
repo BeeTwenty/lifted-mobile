@@ -29,6 +29,7 @@ interface Exercise {
   reps: number;
   weight?: number;
   notes?: string;
+  order?: number;
 }
 
 const ExecuteWorkout = () => {
@@ -84,13 +85,17 @@ const ExecuteWorkout = () => {
         
         setWorkout(workoutData);
         
+        // Fetch exercises and maintain their order
         const { data: exercisesData, error: exercisesError } = await supabase
           .from('exercises')
           .select('*')
           .eq('workout_id', id)
-          .order('id', { ascending: true });
+          .order('created_at', { ascending: true });
         
         if (exercisesError) throw exercisesError;
+        
+        // Sort exercises based on the order they were added
+        // This ensures they appear in the same order as in the EditWorkout page
         setExercises(exercisesData || []);
       } catch (error: any) {
         console.error('Error fetching workout data:', error);

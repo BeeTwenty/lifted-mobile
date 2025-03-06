@@ -169,15 +169,17 @@ const EditWorkout = () => {
       
       if (deleteExercisesError) throw deleteExercisesError;
       
-      // Add the updated exercises
+      // Add the updated exercises with their order preserved
       if (selectedExercises.length > 0) {
-        const exercisesToInsert = selectedExercises.map(ex => ({
+        const exercisesToInsert = selectedExercises.map((ex, index) => ({
           workout_id: workout.id,
           name: ex.name,
           sets: ex.sets,
           reps: ex.reps,
           weight: ex.weight || null,
-          notes: ex.notes || null
+          notes: ex.notes || null,
+          // Adding the index to preserve order
+          order: index
         }));
         
         const { error: exercisesError } = await supabase
