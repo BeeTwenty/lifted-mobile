@@ -1,47 +1,21 @@
 
-import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { useParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import NavBar from "@/components/NavBar";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
 import WorkoutExercise from "@/components/workout/WorkoutExercise";
-import WorkoutTimer from "@/components/workout/WorkoutTimer";
+import WorkoutHeader from "@/components/workout/WorkoutHeader";
 import WorkoutProgress from "@/components/workout/WorkoutProgress";
 import WorkoutComplete from "@/components/workout/WorkoutComplete";
 import { useWorkoutTimer } from "@/hooks/useWorkoutTimer";
 import { useWorkoutState } from "@/hooks/useWorkoutState";
-
-interface Workout {
-  id: string;
-  title: string;
-  duration: number;
-  notes: string | null;
-  default_rest_time: number | null;
-}
-
-interface Exercise {
-  id: string;
-  name: string;
-  sets: number;
-  reps: number;
-  weight?: number;
-  notes?: string;
-  order?: number;
-  workout_id: string;
-  rest_time: number | null;
-  media_url?: string;
-}
+import { useWorkoutData } from "@/hooks/useWorkoutData";
 
 const ExecuteWorkout = () => {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
   const { user } = useAuth();
-  const [workout, setWorkout] = useState<Workout | null>(null);
-  const [exercises, setExercises] = useState<Exercise[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { workout, exercises, isLoading, setExercises } = useWorkoutData(id, user?.id);
 
   const {
     isRunning,
@@ -65,87 +39,6 @@ const ExecuteWorkout = () => {
     completeWorkout
   } = useWorkoutState(workout, exercises, user?.id);
 
-  useEffect(() => {
-    const fetchWorkoutData = async () => {
-      try {
-        setIsLoading(true);
-        
-        if (!id || !user) return;
-
-        const { data: workoutData, error: workoutError } = await supabase
-          .from('workouts')
-          .select('*')
-          .eq('id', id)
-          .eq('user_id', user.id)
-          .single();
-        
-        if (workoutError) throw workoutError;
-        if (!workoutData) {
-          toast.error('Workout not found');
-          navigate('/');
-          return;
-        }
-        
-        setWorkout(workoutData);
-        
-        // Fetch exercises with their media URLs from exercise_templates
-        const { data: exercisesData, error: exercisesError } = await supabase
-          .from('exercises')
-          .select('*')
-          .eq('workout_id', id)
-          .order('order', { ascending: true });
-        
-        if (exercisesError) throw exercisesError;
-        
-        // If we have exercises, fetch their media URLs
-        if (exercisesData && exercisesData.length > 0) {
-          // Get unique exercise names to query exercise_templates
-          const exerciseNames = [...new Set(exercisesData.map(exercise => exercise.name))];
-          
-          // Fetch media URLs for these exercise names
-          const { data: templateData, error: templateError } = await supabase
-            .from('exercise_templates')
-            .select('name, media_url')
-            .in('name', exerciseNames);
-          
-          if (templateError) throw templateError;
-          
-          // Create a lookup map for quick access to media URLs
-          const mediaUrlMap = templateData ? 
-            templateData.reduce((map, template) => {
-              map[template.name] = template.media_url;
-              return map;
-            }, {} as Record<string, string | null>) : {};
-          
-          // Add media URLs to exercise data
-          const exercisesWithMedia = exercisesData.map(exercise => ({
-            ...exercise,
-            media_url: mediaUrlMap[exercise.name] || undefined
-          }));
-          
-          // Sort by order (same as before)
-          const sortedExercises = [...exercisesWithMedia].sort((a, b) => {
-            const orderA = a.order !== undefined && a.order !== null ? a.order : Number.MAX_SAFE_INTEGER;
-            const orderB = b.order !== undefined && b.order !== null ? b.order : Number.MAX_SAFE_INTEGER;
-            return orderA - orderB;
-          });
-          
-          setExercises(sortedExercises);
-        } else {
-          setExercises([]);
-        }
-      } catch (error: any) {
-        console.error('Error fetching workout data:', error);
-        toast.error('Failed to load workout');
-        navigate('/');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchWorkoutData();
-  }, [id, user, navigate]);
-
   const handleCompleteSet = (exerciseId: string, setNumber: number, totalSets: number) => {
     if (workout?.default_rest_time) {
       completeSet(exerciseId, setNumber, totalSets, startRestTimer);
@@ -167,7 +60,6 @@ const ExecuteWorkout = () => {
     const success = await completeWorkout(elapsedTime);
     if (success) {
       toast.success('Workout recorded successfully!');
-      navigate('/');
     } else {
       toast.error('Failed to record workout');
     }
@@ -193,7 +85,7 @@ const ExecuteWorkout = () => {
         <main className="max-w-md mx-auto px-4 py-6">
           <div className="text-center py-10">
             <p className="text-muted-foreground">Workout not found</p>
-            <Button onClick={() => navigate("/")} className="mt-4">
+            <Button onClick={() => window.location.href = "/"} className="mt-4">
               Return to Dashboard
             </Button>
           </div>
@@ -206,26 +98,14 @@ const ExecuteWorkout = () => {
     <div className="min-h-screen bg-background">
       <NavBar />
       <main className="max-w-md mx-auto px-4 py-6">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center">
-            <Button 
-              variant="ghost" 
-              className="mr-2 p-0 h-9 w-9" 
-              onClick={() => navigate("/")}
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            <h1 className="text-xl font-semibold text-foreground">{workout.title}</h1>
-          </div>
-          
-          <WorkoutTimer 
-            elapsedTime={elapsedTime} 
-            isRunning={isRunning} 
-            onToggle={toggleTimer}
-            restTimeRemaining={restTimeRemaining}
-            onSkipRest={skipRestTimer}
-          />
-        </div>
+        <WorkoutHeader
+          title={workout.title}
+          elapsedTime={elapsedTime}
+          isRunning={isRunning}
+          onToggle={toggleTimer}
+          restTimeRemaining={restTimeRemaining}
+          onSkipRest={skipRestTimer}
+        />
 
         <WorkoutProgress 
           completedCount={completedExercises.length} 
