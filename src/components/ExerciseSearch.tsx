@@ -62,6 +62,14 @@ const ExerciseSearch = ({ onSelectExercise, selectedExercises = [] }: ExerciseSe
     return selectedExercises.some(ex => ex.id === id);
   };
 
+  const handleSelectExercise = (exercise: { id: string; name: string }) => {
+    onSelectExercise(exercise);
+    // Clear the search query and results after adding an exercise
+    setSearchQuery("");
+    setSearchResults([]);
+    setHasSearched(false);
+  };
+
   return (
     <div className="space-y-3">
       <div className="flex items-center space-x-2">
@@ -109,7 +117,7 @@ const ExerciseSearch = ({ onSelectExercise, selectedExercises = [] }: ExerciseSe
                     size="sm"
                     variant={isExerciseSelected(exercise.id) ? "secondary" : "ghost"}
                     className="h-8 w-8 p-0 rounded-full"
-                    onClick={() => onSelectExercise({ id: exercise.id, name: exercise.name })}
+                    onClick={() => handleSelectExercise({ id: exercise.id, name: exercise.name })}
                     disabled={isExerciseSelected(exercise.id)}
                   >
                     <Plus className="h-4 w-4" />
