@@ -133,7 +133,7 @@ const ExecuteWorkout = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-background">
         <NavBar />
         <main className="max-w-md mx-auto px-4 py-6">
           <div className="flex justify-center py-10">
@@ -146,11 +146,11 @@ const ExecuteWorkout = () => {
 
   if (!workout) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-background">
         <NavBar />
         <main className="max-w-md mx-auto px-4 py-6">
           <div className="text-center py-10">
-            <p className="text-gray-500">Workout not found</p>
+            <p className="text-muted-foreground">Workout not found</p>
             <Button onClick={() => navigate("/")} className="mt-4">
               Return to Dashboard
             </Button>
@@ -161,7 +161,7 @@ const ExecuteWorkout = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       <NavBar />
       <main className="max-w-md mx-auto px-4 py-6">
         <div className="flex items-center justify-between mb-6">
@@ -173,7 +173,7 @@ const ExecuteWorkout = () => {
             >
               <ArrowLeft className="h-5 w-5" />
             </Button>
-            <h1 className="text-xl font-semibold">{workout.title}</h1>
+            <h1 className="text-xl font-semibold text-foreground">{workout.title}</h1>
           </div>
           
           <WorkoutTimer 

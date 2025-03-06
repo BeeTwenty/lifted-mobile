@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -97,5 +98,15 @@
 
   body {
     @apply bg-background text-foreground;
+  }
+  
+  /* Ensure inputs have proper contrast in dark mode */
+  .dark input::placeholder {
+    @apply text-gray-400;
+  }
+  
+  /* Ensure proper contrast for inputs in dark mode */
+  .dark input {
+    @apply text-foreground bg-input;
   }
 }

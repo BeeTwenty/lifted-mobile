@@ -60,11 +60,11 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       <NavBar />
       <main className="max-w-md mx-auto px-4 py-6">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-xl font-semibold">My Workout Routines</h1>
+          <h1 className="text-xl font-semibold text-foreground">My Workout Routines</h1>
           <Button 
             size="sm" 
             className="flex items-center gap-1"
@@ -81,9 +81,9 @@ const Dashboard = () => {
           </div>
         ) : workoutRoutines.length === 0 ? (
           <div className="text-center py-10">
-            <Dumbbell className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-            <p className="text-gray-500">No workout routines yet</p>
-            <p className="text-gray-400 text-sm mb-4">Create your first routine to get started</p>
+            <Dumbbell className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
+            <p className="text-muted-foreground">No workout routines yet</p>
+            <p className="text-muted-foreground text-sm mb-4">Create your first routine to get started</p>
             <Button onClick={() => navigate("/create-workout")}>
               <Plus className="mr-2" size={16} />
               Create Routine

@@ -108,19 +108,19 @@ const WeightTracker = () => {
   const latestWeight = weightRecords.length > 0 ? weightRecords[0].weight : null;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       <NavBar />
       <main className="max-w-md mx-auto px-4 py-6">
-        <h1 className="text-xl font-semibold mb-6">Weight Tracker</h1>
+        <h1 className="text-xl font-semibold mb-6 text-foreground">Weight Tracker</h1>
         
         <div className="mb-6">
           <WeightForm onAddWeight={handleAddWeight} />
           {userHeight ? (
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-sm text-muted-foreground mt-1">
               Your height: {userHeight} cm
             </p>
           ) : (
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-sm text-muted-foreground mt-1">
               Your height can be updated in the settings page
             </p>
           )}

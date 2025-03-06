@@ -199,7 +199,7 @@ const EditWorkout = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-background">
         <NavBar />
         <main className="max-w-md mx-auto px-4 py-6">
           <div className="flex items-center mb-6">
@@ -210,7 +210,7 @@ const EditWorkout = () => {
             >
               <ArrowLeft className="h-5 w-5" />
             </Button>
-            <h1 className="text-xl font-semibold">Edit Workout Routine</h1>
+            <h1 className="text-xl font-semibold text-foreground">Edit Workout Routine</h1>
           </div>
           <div className="flex justify-center py-10">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -221,7 +221,7 @@ const EditWorkout = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       <NavBar />
       <main className="max-w-md mx-auto px-4 py-6">
         <div className="flex items-center mb-6">
@@ -232,7 +232,7 @@ const EditWorkout = () => {
           >
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <h1 className="text-xl font-semibold">Edit Workout Routine</h1>
+          <h1 className="text-xl font-semibold text-foreground">Edit Workout Routine</h1>
         </div>
         
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -248,7 +248,7 @@ const EditWorkout = () => {
           />
           
           <div className="space-y-2">
-            <h2 className="text-lg font-medium">Exercises</h2>
+            <h2 className="text-lg font-medium text-foreground">Exercises</h2>
             <ExerciseSearch 
               onSelectExercise={addExercise} 
               selectedExercises={selectedExercises}

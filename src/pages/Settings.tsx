@@ -46,8 +46,8 @@ const Settings = () => {
         
         <Card>
           <CardHeader>
-            <CardTitle>Account</CardTitle>
-            <CardDescription>Manage your account settings</CardDescription>
+            <CardTitle className="text-card-foreground">Account</CardTitle>
+            <CardDescription className="text-muted-foreground">Manage your account settings</CardDescription>
           </CardHeader>
           <CardFooter className="border-t pt-6">
             <Button 
