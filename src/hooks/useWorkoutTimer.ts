@@ -5,6 +5,7 @@ import {
   cancelNotification, 
   initializeNotifications 
 } from "@/services/NotificationService";
+import { Capacitor } from '@capacitor/core';
 
 export const useWorkoutTimer = (initialRunningState = false) => {
   const [isRunning, setIsRunning] = useState(initialRunningState);
@@ -57,8 +58,10 @@ export const useWorkoutTimer = (initialRunningState = false) => {
             if (restTimerRef.current) {
               clearInterval(restTimerRef.current);
             }
-            const audio = new Audio('/notification.mp3');
-            audio.play().catch(e => console.log('Audio play failed:', e));
+            
+            // Play sound when timer completes - try both ways
+            playTimerCompletionSound();
+            
             return null;
           }
           return prev - 1;
@@ -88,6 +91,20 @@ export const useWorkoutTimer = (initialRunningState = false) => {
     };
   }, [restTimeRemaining]);
 
+  // Helper function to play sound when timer completes
+  const playTimerCompletionSound = () => {
+    try {
+      // Only play in-app sound if we're not using native notifications
+      // or if we're in the browser
+      if (!Capacitor.isNativePlatform()) {
+        const audio = new Audio('/notification.mp3');
+        audio.play().catch(e => console.log('Audio play failed:', e));
+      }
+    } catch (error) {
+      console.error('Error playing timer completion sound:', error);
+    }
+  };
+
   const toggleTimer = () => {
     setIsRunning(!isRunning);
   };
@@ -100,8 +117,7 @@ export const useWorkoutTimer = (initialRunningState = false) => {
   const skipRestTimer = () => {
     console.log('Skipping rest timer');
     setRestTimeRemaining(null);
-    const audio = new Audio('/notification.mp3');
-    audio.play().catch(e => console.log('Audio play failed:', e));
+    playTimerCompletionSound();
   };
 
   return {
