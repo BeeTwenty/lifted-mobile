@@ -13,6 +13,7 @@ import ExecuteWorkout from "@/pages/ExecuteWorkout";
 import NotFound from "./pages/NotFound";
 import EditWorkout from "./pages/EditWorkout";
 import WeightTracker from "./pages/WeightTracker";
+import Settings from "./pages/Settings";
 
 const queryClient = new QueryClient();
 
@@ -32,6 +33,7 @@ const App = () => (
               <Route path="/edit-workout/:id" element={<EditWorkout />} />
               <Route path="/execute-workout/:id" element={<ExecuteWorkout />} />
               <Route path="/weight-tracker" element={<WeightTracker />} />
+              <Route path="/settings" element={<Settings />} />
             </Route>
             
             <Route path="*" element={<NotFound />} />

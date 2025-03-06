@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -11,7 +12,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Scale, LogOut } from "lucide-react";
+import { Scale, LogOut, Settings } from "lucide-react";
 
 const NavBar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -31,6 +32,12 @@ const NavBar = () => {
             >
               <Scale className="h-5 w-5" />
             </Link>
+            <Link 
+              to="/settings" 
+              className="p-2 text-gray-700 hover:text-gray-900 rounded-md hover:bg-gray-100"
+            >
+              <Settings className="h-5 w-5" />
+            </Link>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="h-8 w-8 p-0">
@@ -45,6 +52,7 @@ const NavBar = () => {
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => navigate("/")}>Dashboard</DropdownMenuItem>
                 <DropdownMenuItem onClick={() => navigate("/create-workout")}>New Workout</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate("/settings")}>Settings</DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => signOut()}>
                   Logout
