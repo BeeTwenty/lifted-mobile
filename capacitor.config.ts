@@ -25,7 +25,7 @@ const config: CapacitorConfig = {
       iconColor: "#488AFF",
       sound: "default",
       allowWhileIdle: true,
-      importance: "high",
+      importance: "max",
       foreground: true,
       createDefaultChannel: true,
       pressAction: {
@@ -35,15 +35,26 @@ const config: CapacitorConfig = {
       visibility: "public",
       // Make Android create a notification channel by default
       androidChannelEnabled: true,
+      androidChannelOptions: {
+        importance: "high",
+        sound: "default",
+        visibility: "public",
+        lightColor: "#FF0000",
+        lights: true,
+        vibration: true,
+        badge: true,
+        canBypassDnd: true,
+      },
       androidChannelConfig: {
         id: "workout-timer",
         name: "Workout Timer",
         description: "Notifications for workout timers",
-        importance: "high",
-        visibility: "public",
+        importance: 5,  // Use number value 5 for high importance
+        visibility: 1,  // Use number value 1 for public visibility
         sound: "default",
         vibration: true,
-        lights: true
+        lights: true,
+        lightColor: "#FF0000"
       }
     }
   },

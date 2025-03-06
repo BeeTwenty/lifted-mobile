@@ -42,11 +42,21 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths"/>
         </provider>
+        
+        <!-- Receiver for notification taps -->
+        <receiver android:name="com.getcapacitor.plugin.notification.NotificationActionReceiver" android:exported="true"/>
+        
+        <!-- Receiver for notifications -->
+        <receiver android:name="com.getcapacitor.plugin.notification.TimedNotificationPublisher" android:exported="true"/>
+        
+        <!-- Notification Service -->
+        <service
+            android:name="com.getcapacitor.plugin.background.BackgroundService"
+            android:exported="false" />
     </application>
 
     <!-- Permissions -->
-    <uses-permission android:name="android.permission.INTERNET"
-        tools:ignore="ManifestOrder" />
+    <uses-permission android:name="android.permission.INTERNET" tools:ignore="ManifestOrder" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
@@ -56,4 +66,6 @@
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <uses-permission android:name="android.permission.NOTIFICATION_DURING_SETUP" />
 </manifest>
