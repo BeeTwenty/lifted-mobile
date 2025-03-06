@@ -7,9 +7,15 @@ interface WorkoutTimerProps {
   elapsedTime: number;
   isRunning: boolean;
   onToggle: () => void;
+  restTimeRemaining?: number | null;
 }
 
-const WorkoutTimer = ({ elapsedTime, isRunning, onToggle }: WorkoutTimerProps) => {
+const WorkoutTimer = ({ 
+  elapsedTime, 
+  isRunning, 
+  onToggle, 
+  restTimeRemaining 
+}: WorkoutTimerProps) => {
   // Format time as MM:SS
   const formatTime = (timeInSeconds: number): string => {
     const minutes = Math.floor(timeInSeconds / 60);
@@ -20,12 +26,19 @@ const WorkoutTimer = ({ elapsedTime, isRunning, onToggle }: WorkoutTimerProps) =
   return (
     <Card className="flex items-center px-3 py-1.5 bg-gray-50">
       <Timer className="h-4 w-4 mr-2 text-gray-500" />
-      <span className="font-mono font-medium mr-2">{formatTime(elapsedTime)}</span>
+      {restTimeRemaining ? (
+        <div className="font-mono font-medium mr-2 text-amber-600">
+          Rest: {formatTime(restTimeRemaining)}
+        </div>
+      ) : (
+        <span className="font-mono font-medium mr-2">{formatTime(elapsedTime)}</span>
+      )}
       <Button 
         variant="ghost" 
         size="sm" 
         className="h-7 w-7 p-0" 
         onClick={onToggle}
+        disabled={restTimeRemaining !== null && restTimeRemaining > 0}
       >
         {isRunning ? (
           <Pause className="h-4 w-4" />

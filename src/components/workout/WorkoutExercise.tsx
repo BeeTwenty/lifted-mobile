@@ -24,6 +24,8 @@ interface WorkoutExerciseProps {
   onNext: () => void;
   isFirst: boolean;
   isLast: boolean;
+  onCompleteSet?: (id: string, setNumber: number, totalSets: number) => void;
+  isRestTimerActive?: boolean;
 }
 
 const WorkoutExercise = ({
@@ -35,6 +37,8 @@ const WorkoutExercise = ({
   onNext,
   isFirst,
   isLast,
+  onCompleteSet,
+  isRestTimerActive = false,
 }: WorkoutExerciseProps) => {
   const [currentSet, setCurrentSet] = useState(1);
   const [completedSets, setCompletedSets] = useState<number[]>([]);
@@ -42,6 +46,11 @@ const WorkoutExercise = ({
   const [weightValue, setWeightValue] = useState(exercise.weight || 0);
 
   const completeSet = () => {
+    // Notify parent about set completion (for rest timer)
+    if (onCompleteSet) {
+      onCompleteSet(exercise.id, currentSet, exercise.sets);
+    }
+    
     setCompletedSets(prev => [...prev, currentSet]);
     
     if (currentSet < exercise.sets) {
@@ -148,8 +157,11 @@ const WorkoutExercise = ({
           <Button 
             className="w-full mb-3" 
             onClick={completeSet}
+            disabled={isRestTimerActive}
           >
-            {currentSet === exercise.sets && completedSets.length === exercise.sets - 1
+            {isRestTimerActive 
+              ? "Resting..." 
+              : currentSet === exercise.sets && completedSets.length === exercise.sets - 1
               ? 'Complete Exercise'
               : `Complete Set ${currentSet}`}
           </Button>
@@ -162,7 +174,7 @@ const WorkoutExercise = ({
           variant="outline"
           size="sm"
           onClick={onPrevious}
-          disabled={isFirst}
+          disabled={isFirst || isRestTimerActive}
           className={isFirst ? 'invisible' : ''}
         >
           <ChevronLeft className="mr-1 h-4 w-4" />
@@ -172,7 +184,7 @@ const WorkoutExercise = ({
           variant="outline"
           size="sm"
           onClick={onNext}
-          disabled={isLast}
+          disabled={isLast || isRestTimerActive}
           className={isLast ? 'invisible' : ''}
         >
           Next

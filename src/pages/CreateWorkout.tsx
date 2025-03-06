@@ -26,6 +26,7 @@ const CreateWorkout = () => {
   const { user } = useAuth();
   const [title, setTitle] = useState("");
   const [duration, setDuration] = useState<number>(30);
+  const [restTime, setRestTime] = useState<number>(60); // Default 60 seconds rest
   const [notes, setNotes] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [selectedExercises, setSelectedExercises] = useState<Exercise[]>([]);
@@ -93,7 +94,8 @@ const CreateWorkout = () => {
           title,
           duration: Number(duration),
           notes: notes || null,
-          user_id: user.id
+          user_id: user.id,
+          default_rest_time: restTime // Store the rest time in the database
         })
         .select()
         .single();
@@ -151,6 +153,8 @@ const CreateWorkout = () => {
             setDuration={setDuration}
             notes={notes}
             setNotes={setNotes}
+            restTime={restTime}
+            setRestTime={setRestTime}
           />
           
           <div className="space-y-2">

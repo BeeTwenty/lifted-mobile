@@ -43,6 +43,10 @@ const ExecuteWorkout = () => {
   const [isRunning, setIsRunning] = useState(false);
   const [elapsedTime, setElapsedTime] = useState(0);
   const timerRef = useRef<number | null>(null);
+  
+  // Rest timer states
+  const [restTimeRemaining, setRestTimeRemaining] = useState<number | null>(null);
+  const restTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
     // Fetch workout details and exercises
@@ -78,6 +82,9 @@ const ExecuteWorkout = () => {
         
         if (exercisesError) throw exercisesError;
         setExercises(exercisesData || []);
+        
+        // Auto-start the timer when data is loaded
+        setIsRunning(true);
       } catch (error: any) {
         console.error('Error fetching workout data:', error);
         toast.error('Failed to load workout');
@@ -88,9 +95,19 @@ const ExecuteWorkout = () => {
     };
 
     fetchWorkoutData();
+
+    // Clean up all timers when component unmounts
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+      if (restTimerRef.current) {
+        clearInterval(restTimerRef.current);
+      }
+    };
   }, [id, user, navigate]);
 
-  // Timer logic
+  // Main timer logic
   useEffect(() => {
     if (isRunning) {
       timerRef.current = window.setInterval(() => {
@@ -107,8 +124,50 @@ const ExecuteWorkout = () => {
     };
   }, [isRunning]);
 
+  // Rest timer logic
+  useEffect(() => {
+    if (restTimeRemaining !== null && restTimeRemaining > 0) {
+      restTimerRef.current = window.setInterval(() => {
+        setRestTimeRemaining(prev => {
+          if (prev === null || prev <= 1) {
+            // Rest time complete, clear the interval
+            if (restTimerRef.current) {
+              clearInterval(restTimerRef.current);
+            }
+            // Play sound when rest time is over
+            const audio = new Audio('/notification.mp3');
+            audio.play().catch(e => console.log('Audio play failed:', e));
+            return null;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    } else if (restTimerRef.current) {
+      clearInterval(restTimerRef.current);
+    }
+
+    return () => {
+      if (restTimerRef.current) {
+        clearInterval(restTimerRef.current);
+      }
+    };
+  }, [restTimeRemaining]);
+
   const toggleTimer = () => {
     setIsRunning(!isRunning);
+  };
+
+  const startRestTimer = () => {
+    // Use the workout's default rest time or a fallback of 60 seconds
+    const restDuration = workout?.default_rest_time || 60;
+    setRestTimeRemaining(restDuration);
+  };
+
+  const completeSet = (exerciseId: string, setNumber: number, totalSets: number) => {
+    // If this wasn't the last set, start the rest timer
+    if (setNumber < totalSets) {
+      startRestTimer();
+    }
   };
 
   const markExerciseComplete = (exerciseId: string) => {
@@ -225,7 +284,8 @@ const ExecuteWorkout = () => {
           <WorkoutTimer 
             elapsedTime={elapsedTime} 
             isRunning={isRunning} 
-            onToggle={toggleTimer} 
+            onToggle={toggleTimer}
+            restTimeRemaining={restTimeRemaining}
           />
         </div>
 
@@ -258,6 +318,8 @@ const ExecuteWorkout = () => {
             onNext={goToNextExercise}
             isFirst={activeExerciseIndex === 0}
             isLast={activeExerciseIndex === exercises.length - 1}
+            onCompleteSet={completeSet}
+            isRestTimerActive={restTimeRemaining !== null && restTimeRemaining > 0}
           />
         )}
 
