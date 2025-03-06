@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,6 +10,7 @@ import {
   Edit, 
   Dumbbell, 
   Video,
+  Image as ImageIcon,
   ExternalLink
 } from "lucide-react";
 import {
@@ -69,7 +69,6 @@ const WorkoutExercise = ({
   const [weightValue, setWeightValue] = useState(exercise.weight || 0);
 
   const completeSet = () => {
-    // Notify parent about set completion (for rest timer)
     if (onCompleteSet) {
       onCompleteSet(exercise.id, currentSet, exercise.sets);
     }
@@ -79,7 +78,6 @@ const WorkoutExercise = ({
     if (currentSet < exercise.sets) {
       setCurrentSet(prev => prev + 1);
     } else {
-      // All sets completed
       onComplete(exercise.id);
       setCurrentSet(1);
       setCompletedSets([]);
@@ -91,60 +89,117 @@ const WorkoutExercise = ({
     setEditingWeight(false);
   };
 
+  const getMediaType = (url: string): 'youtube' | 'vimeo' | 'video' | 'image' => {
+    if (url.includes('youtube.com') || url.includes('youtu.be')) {
+      return 'youtube';
+    }
+    
+    if (url.includes('vimeo.com')) {
+      return 'vimeo';
+    }
+    
+    const videoExtensions = ['.mp4', '.mov', '.webm', '.ogg', '.avi'];
+    if (videoExtensions.some(ext => url.toLowerCase().endsWith(ext))) {
+      return 'video';
+    }
+    
+    return 'image';
+  };
+  
+  const getYouTubeEmbedUrl = (url: string) => {
+    if (url.includes('youtube.com/watch?v=')) {
+      const videoId = url.split('v=')[1].split('&')[0];
+      return `https://www.youtube.com/embed/${videoId}`;
+    } else if (url.includes('youtu.be/')) {
+      const videoId = url.split('youtu.be/')[1].split('?')[0];
+      return `https://www.youtube.com/embed/${videoId}`;
+    }
+    return url;
+  };
+  
+  const getVimeoEmbedUrl = (url: string) => {
+    if (url.includes('vimeo.com/')) {
+      const videoId = url.split('vimeo.com/')[1].split('?')[0].split('/')[0];
+      return `https://player.vimeo.com/video/${videoId}`;
+    }
+    return url;
+  };
+
   const renderMediaContent = () => {
     if (!exercise.media_url) return null;
     
-    // Check if it's a video URL (simple check)
-    const isVideo = exercise.media_url.match(/\.(mp4|webm|ogg)$/) !== null || 
-                    exercise.media_url.includes('youtube.com') ||
-                    exercise.media_url.includes('youtu.be') ||
-                    exercise.media_url.includes('vimeo.com');
-                    
-    // Handle YouTube embed URLs
-    const getYouTubeEmbedUrl = (url: string) => {
-      if (url.includes('youtube.com/watch?v=')) {
-        const videoId = url.split('v=')[1].split('&')[0];
-        return `https://www.youtube.com/embed/${videoId}`;
-      } else if (url.includes('youtu.be/')) {
-        const videoId = url.split('youtu.be/')[1].split('?')[0];
-        return `https://www.youtube.com/embed/${videoId}`;
-      }
-      return url;
-    };
+    const mediaType = getMediaType(exercise.media_url);
     
-    if (isVideo) {
-      if (exercise.media_url.includes('youtube.com') || exercise.media_url.includes('youtu.be')) {
-        const embedUrl = getYouTubeEmbedUrl(exercise.media_url);
+    switch (mediaType) {
+      case 'youtube':
+        const youtubeEmbedUrl = getYouTubeEmbedUrl(exercise.media_url);
         return (
           <div className="w-full aspect-video">
             <iframe 
-              src={embedUrl} 
+              src={youtubeEmbedUrl} 
               className="w-full h-full"
               title={`How to do ${exercise.name}`}
               allowFullScreen
             ></iframe>
           </div>
         );
-      } else {
+        
+      case 'vimeo':
+        const vimeoEmbedUrl = getVimeoEmbedUrl(exercise.media_url);
+        return (
+          <div className="w-full aspect-video">
+            <iframe 
+              src={vimeoEmbedUrl} 
+              className="w-full h-full"
+              title={`How to do ${exercise.name}`}
+              allowFullScreen
+            ></iframe>
+          </div>
+        );
+        
+      case 'video':
         return (
           <video 
             src={exercise.media_url} 
             controls 
             className="w-full h-auto"
+            controlsList="nodownload" 
+            playsInline
           >
             Your browser does not support the video tag.
           </video>
         );
-      }
-    } else {
-      // Assumed to be an image
-      return (
-        <img 
-          src={exercise.media_url} 
-          alt={`How to do ${exercise.name}`} 
-          className="w-full h-auto"
-        />
-      );
+        
+      case 'image':
+      default:
+        return (
+          <div className="flex justify-center">
+            <img 
+              src={exercise.media_url} 
+              alt={`How to do ${exercise.name}`} 
+              className="max-w-full max-h-[70vh] object-contain"
+              onError={(e) => {
+                e.currentTarget.src = "/placeholder.svg";
+              }}
+            />
+          </div>
+        );
+    }
+  };
+
+  const getMediaIcon = () => {
+    if (!exercise.media_url) return null;
+    
+    const mediaType = getMediaType(exercise.media_url);
+    
+    switch (mediaType) {
+      case 'youtube':
+      case 'vimeo':
+      case 'video':
+        return <Video className="h-4 w-4 text-muted-foreground" />;
+      case 'image':
+      default:
+        return <ImageIcon className="h-4 w-4 text-muted-foreground" />;
     }
   };
 
@@ -154,7 +209,6 @@ const WorkoutExercise = ({
         <div className="flex items-center">
           <h2 className="font-medium text-lg text-foreground">{exercise.name}</h2>
           
-          {/* Media viewer button */}
           {exercise.media_url && (
             <TooltipProvider>
               <Tooltip>
@@ -162,7 +216,7 @@ const WorkoutExercise = ({
                   <Dialog>
                     <DialogTrigger asChild>
                       <Button variant="ghost" size="sm" className="ml-2 p-1 h-6 w-6">
-                        <Video className="h-4 w-4 text-muted-foreground" />
+                        {getMediaIcon()}
                       </Button>
                     </DialogTrigger>
                     <DialogContent className="sm:max-w-[600px]">
@@ -201,7 +255,6 @@ const WorkoutExercise = ({
         )}
       </div>
       
-      {/* Exercise details */}
       <div className="grid grid-cols-3 gap-3 mb-4">
         <div className="bg-secondary p-2 rounded text-center">
           <p className="text-xs text-muted-foreground">Sets</p>
@@ -253,7 +306,6 @@ const WorkoutExercise = ({
 
       {!isComplete && (
         <>
-          {/* Current set tracker */}
           <div className="mb-4">
             <div className="flex justify-between items-center mb-2">
               <p className="text-sm text-foreground">Current Set</p>
@@ -275,7 +327,6 @@ const WorkoutExercise = ({
             </div>
           </div>
 
-          {/* Action buttons */}
           <Button 
             className="w-full mb-3" 
             onClick={completeSet}
@@ -290,7 +341,6 @@ const WorkoutExercise = ({
         </>
       )}
 
-      {/* Navigation */}
       <div className="flex justify-between">
         <Button
           variant="outline"
