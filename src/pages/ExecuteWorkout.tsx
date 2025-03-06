@@ -1,14 +1,18 @@
-import { useState, useEffect, useRef } from "react";
+
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import NavBar from "@/components/NavBar";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { ArrowLeft, Play, Pause, CheckCircle, Timer, Edit } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import WorkoutExercise from "@/components/workout/WorkoutExercise";
 import WorkoutTimer from "@/components/workout/WorkoutTimer";
+import WorkoutProgress from "@/components/workout/WorkoutProgress";
+import WorkoutComplete from "@/components/workout/WorkoutComplete";
+import { useWorkoutTimer } from "@/hooks/useWorkoutTimer";
+import { useWorkoutState } from "@/hooks/useWorkoutState";
 
 interface Workout {
   id: string;
@@ -34,16 +38,28 @@ const ExecuteWorkout = () => {
   const [workout, setWorkout] = useState<Workout | null>(null);
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [activeExerciseIndex, setActiveExerciseIndex] = useState(0);
-  const [completedExercises, setCompletedExercises] = useState<string[]>([]);
-  const [isWorkoutComplete, setIsWorkoutComplete] = useState(false);
-  
-  const [isRunning, setIsRunning] = useState(false);
-  const [elapsedTime, setElapsedTime] = useState(0);
-  const timerRef = useRef<number | null>(null);
-  
-  const [restTimeRemaining, setRestTimeRemaining] = useState<number | null>(null);
-  const restTimerRef = useRef<number | null>(null);
+
+  const {
+    isRunning,
+    elapsedTime,
+    restTimeRemaining,
+    toggleTimer,
+    startRestTimer,
+    skipRestTimer,
+    setElapsedTime
+  } = useWorkoutTimer(true);
+
+  const {
+    activeExerciseIndex,
+    completedExercises,
+    isWorkoutComplete,
+    completeSet,
+    markExerciseComplete,
+    goToPreviousExercise,
+    goToNextExercise,
+    updateExerciseWeight,
+    completeWorkout
+  } = useWorkoutState(workout, exercises, user?.id);
 
   useEffect(() => {
     const fetchWorkoutData = async () => {
@@ -76,8 +92,6 @@ const ExecuteWorkout = () => {
         
         if (exercisesError) throw exercisesError;
         setExercises(exercisesData || []);
-        
-        setIsRunning(true);
       } catch (error: any) {
         console.error('Error fetching workout data:', error);
         toast.error('Failed to load workout');
@@ -88,140 +102,33 @@ const ExecuteWorkout = () => {
     };
 
     fetchWorkoutData();
-
-    return () => {
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-      }
-      if (restTimerRef.current) {
-        clearInterval(restTimerRef.current);
-      }
-    };
   }, [id, user, navigate]);
 
-  useEffect(() => {
-    if (isRunning) {
-      timerRef.current = window.setInterval(() => {
-        setElapsedTime(prev => prev + 1);
-      }, 1000);
-    } else if (timerRef.current) {
-      clearInterval(timerRef.current);
-    }
-
-    return () => {
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-      }
-    };
-  }, [isRunning]);
-
-  useEffect(() => {
-    if (restTimeRemaining !== null && restTimeRemaining > 0) {
-      restTimerRef.current = window.setInterval(() => {
-        setRestTimeRemaining(prev => {
-          if (prev === null || prev <= 1) {
-            if (restTimerRef.current) {
-              clearInterval(restTimerRef.current);
-            }
-            const audio = new Audio('/notification.mp3');
-            audio.play().catch(e => console.log('Audio play failed:', e));
-            return null;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-    } else if (restTimerRef.current) {
-      clearInterval(restTimerRef.current);
-    }
-
-    return () => {
-      if (restTimerRef.current) {
-        clearInterval(restTimerRef.current);
-      }
-    };
-  }, [restTimeRemaining]);
-
-  const toggleTimer = () => {
-    setIsRunning(!isRunning);
-  };
-
-  const startRestTimer = () => {
-    const restDuration = workout?.default_rest_time || 60;
-    setRestTimeRemaining(restDuration);
-  };
-
-  const skipRestTimer = () => {
-    setRestTimeRemaining(null);
-    const audio = new Audio('/notification.mp3');
-    audio.play().catch(e => console.log('Audio play failed:', e));
-  };
-
-  const completeSet = (exerciseId: string, setNumber: number, totalSets: number) => {
-    if (setNumber < totalSets) {
-      startRestTimer();
+  const handleCompleteSet = (exerciseId: string, setNumber: number, totalSets: number) => {
+    if (workout?.default_rest_time) {
+      completeSet(exerciseId, setNumber, totalSets, startRestTimer);
     }
   };
 
-  const markExerciseComplete = (exerciseId: string) => {
-    setCompletedExercises(prev => [...prev, exerciseId]);
-    
-    if (activeExerciseIndex === exercises.length - 1) {
-      setIsWorkoutComplete(true);
-      setIsRunning(false);
-      toast.success('Workout completed!');
-    } else {
-      setActiveExerciseIndex(prev => prev + 1);
+  const handleExerciseComplete = (exerciseId: string) => {
+    const isComplete = markExerciseComplete(exerciseId);
+    if (isComplete) {
+      toggleTimer(); // Stop timer when workout is complete
     }
   };
 
-  const goToPreviousExercise = () => {
-    if (activeExerciseIndex > 0) {
-      setActiveExerciseIndex(prev => prev - 1);
-      
-      const prevExerciseId = exercises[activeExerciseIndex - 1]?.id;
-      if (prevExerciseId) {
-        setCompletedExercises(prev => 
-          prev.filter(id => id !== prevExerciseId)
-        );
-      }
-    }
+  const handleUpdateExerciseWeight = (exerciseId: string, newWeight: number) => {
+    updateExerciseWeight(exerciseId, newWeight, exercises, setExercises);
   };
 
-  const goToNextExercise = () => {
-    if (activeExerciseIndex < exercises.length - 1) {
-      setActiveExerciseIndex(prev => prev + 1);
-    }
-  };
-
-  const completeWorkout = async () => {
-    try {
-      if (!user || !workout) return;
-      
-      const { error } = await supabase
-        .from('completed_workouts')
-        .insert({
-          user_id: user.id,
-          workout_id: workout.id,
-          duration: Math.floor(elapsedTime / 60),
-          notes: `Completed ${completedExercises.length} of ${exercises.length} exercises`
-        });
-      
-      if (error) throw error;
-      
+  const handleCompleteWorkout = async () => {
+    const success = await completeWorkout(elapsedTime);
+    if (success) {
       toast.success('Workout recorded successfully!');
       navigate('/');
-    } catch (error: any) {
-      console.error('Error recording workout:', error);
+    } else {
       toast.error('Failed to record workout');
     }
-  };
-
-  const updateExerciseWeight = (exerciseId: string, newWeight: number) => {
-    setExercises(exercises.map(exercise => 
-      exercise.id === exerciseId 
-        ? { ...exercise, weight: newWeight } 
-        : exercise
-    ));
   };
 
   if (isLoading) {
@@ -278,51 +185,31 @@ const ExecuteWorkout = () => {
           />
         </div>
 
-        <div className="mb-4">
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-sm text-gray-500">
-              Progress: {completedExercises.length} / {exercises.length} exercises
-            </p>
-            <p className="text-sm font-medium">
-              {Math.round((completedExercises.length / exercises.length) * 100)}%
-            </p>
-          </div>
-          <div className="w-full bg-gray-200 rounded-full h-2">
-            <div 
-              className="bg-primary h-2 rounded-full" 
-              style={{ width: `${(completedExercises.length / exercises.length) * 100}%` }}
-            ></div>
-          </div>
-        </div>
+        <WorkoutProgress 
+          completedCount={completedExercises.length} 
+          totalCount={exercises.length} 
+        />
 
         {exercises.length > 0 && (
           <WorkoutExercise
             exercise={exercises[activeExerciseIndex]}
             isComplete={completedExercises.includes(exercises[activeExerciseIndex].id)}
-            onComplete={markExerciseComplete}
-            onUpdateWeight={updateExerciseWeight}
+            onComplete={handleExerciseComplete}
+            onUpdateWeight={handleUpdateExerciseWeight}
             onPrevious={goToPreviousExercise}
             onNext={goToNextExercise}
             isFirst={activeExerciseIndex === 0}
             isLast={activeExerciseIndex === exercises.length - 1}
-            onCompleteSet={completeSet}
+            onCompleteSet={handleCompleteSet}
             isRestTimerActive={restTimeRemaining !== null && restTimeRemaining > 0}
           />
         )}
 
         {isWorkoutComplete && (
-          <Card className="mt-6 p-4 bg-green-50 border-green-200">
-            <div className="text-center">
-              <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-2" />
-              <h2 className="text-lg font-medium mb-1">Workout Complete!</h2>
-              <p className="text-gray-600 mb-4">
-                Total time: {Math.floor(elapsedTime / 60)}m {elapsedTime % 60}s
-              </p>
-              <Button onClick={completeWorkout} className="w-full">
-                Save Workout Results
-              </Button>
-            </div>
-          </Card>
+          <WorkoutComplete 
+            totalTime={elapsedTime} 
+            onSave={handleCompleteWorkout} 
+          />
         )}
       </main>
     </div>
