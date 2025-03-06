@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -39,24 +38,20 @@ const ExecuteWorkout = () => {
   const [completedExercises, setCompletedExercises] = useState<string[]>([]);
   const [isWorkoutComplete, setIsWorkoutComplete] = useState(false);
   
-  // Timer states
   const [isRunning, setIsRunning] = useState(false);
   const [elapsedTime, setElapsedTime] = useState(0);
   const timerRef = useRef<number | null>(null);
   
-  // Rest timer states
   const [restTimeRemaining, setRestTimeRemaining] = useState<number | null>(null);
   const restTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
-    // Fetch workout details and exercises
     const fetchWorkoutData = async () => {
       try {
         setIsLoading(true);
         
         if (!id || !user) return;
 
-        // Fetch workout details
         const { data: workoutData, error: workoutError } = await supabase
           .from('workouts')
           .select('*')
@@ -73,7 +68,6 @@ const ExecuteWorkout = () => {
         
         setWorkout(workoutData);
         
-        // Fetch exercises for this workout
         const { data: exercisesData, error: exercisesError } = await supabase
           .from('exercises')
           .select('*')
@@ -83,7 +77,6 @@ const ExecuteWorkout = () => {
         if (exercisesError) throw exercisesError;
         setExercises(exercisesData || []);
         
-        // Auto-start the timer when data is loaded
         setIsRunning(true);
       } catch (error: any) {
         console.error('Error fetching workout data:', error);
@@ -96,7 +89,6 @@ const ExecuteWorkout = () => {
 
     fetchWorkoutData();
 
-    // Clean up all timers when component unmounts
     return () => {
       if (timerRef.current) {
         clearInterval(timerRef.current);
@@ -107,7 +99,6 @@ const ExecuteWorkout = () => {
     };
   }, [id, user, navigate]);
 
-  // Main timer logic
   useEffect(() => {
     if (isRunning) {
       timerRef.current = window.setInterval(() => {
@@ -124,17 +115,14 @@ const ExecuteWorkout = () => {
     };
   }, [isRunning]);
 
-  // Rest timer logic
   useEffect(() => {
     if (restTimeRemaining !== null && restTimeRemaining > 0) {
       restTimerRef.current = window.setInterval(() => {
         setRestTimeRemaining(prev => {
           if (prev === null || prev <= 1) {
-            // Rest time complete, clear the interval
             if (restTimerRef.current) {
               clearInterval(restTimerRef.current);
             }
-            // Play sound when rest time is over
             const audio = new Audio('/notification.mp3');
             audio.play().catch(e => console.log('Audio play failed:', e));
             return null;
@@ -158,13 +146,17 @@ const ExecuteWorkout = () => {
   };
 
   const startRestTimer = () => {
-    // Use the workout's default rest time or a fallback of 60 seconds
     const restDuration = workout?.default_rest_time || 60;
     setRestTimeRemaining(restDuration);
   };
 
+  const skipRestTimer = () => {
+    setRestTimeRemaining(null);
+    const audio = new Audio('/notification.mp3');
+    audio.play().catch(e => console.log('Audio play failed:', e));
+  };
+
   const completeSet = (exerciseId: string, setNumber: number, totalSets: number) => {
-    // If this wasn't the last set, start the rest timer
     if (setNumber < totalSets) {
       startRestTimer();
     }
@@ -173,13 +165,11 @@ const ExecuteWorkout = () => {
   const markExerciseComplete = (exerciseId: string) => {
     setCompletedExercises(prev => [...prev, exerciseId]);
     
-    // If this was the last exercise, check if workout is complete
     if (activeExerciseIndex === exercises.length - 1) {
       setIsWorkoutComplete(true);
       setIsRunning(false);
       toast.success('Workout completed!');
     } else {
-      // Move to next exercise
       setActiveExerciseIndex(prev => prev + 1);
     }
   };
@@ -188,7 +178,6 @@ const ExecuteWorkout = () => {
     if (activeExerciseIndex > 0) {
       setActiveExerciseIndex(prev => prev - 1);
       
-      // Remove the exercise from completed if going back
       const prevExerciseId = exercises[activeExerciseIndex - 1]?.id;
       if (prevExerciseId) {
         setCompletedExercises(prev => 
@@ -208,13 +197,12 @@ const ExecuteWorkout = () => {
     try {
       if (!user || !workout) return;
       
-      // Record the completed workout in the database
       const { error } = await supabase
         .from('completed_workouts')
         .insert({
           user_id: user.id,
           workout_id: workout.id,
-          duration: Math.floor(elapsedTime / 60), // Convert seconds to minutes
+          duration: Math.floor(elapsedTime / 60),
           notes: `Completed ${completedExercises.length} of ${exercises.length} exercises`
         });
       
@@ -286,10 +274,10 @@ const ExecuteWorkout = () => {
             isRunning={isRunning} 
             onToggle={toggleTimer}
             restTimeRemaining={restTimeRemaining}
+            onSkipRest={skipRestTimer}
           />
         </div>
 
-        {/* Workout progress */}
         <div className="mb-4">
           <div className="flex items-center justify-between mb-2">
             <p className="text-sm text-gray-500">
@@ -307,7 +295,6 @@ const ExecuteWorkout = () => {
           </div>
         </div>
 
-        {/* Current exercise */}
         {exercises.length > 0 && (
           <WorkoutExercise
             exercise={exercises[activeExerciseIndex]}
@@ -323,7 +310,6 @@ const ExecuteWorkout = () => {
           />
         )}
 
-        {/* Workout completion */}
         {isWorkoutComplete && (
           <Card className="mt-6 p-4 bg-green-50 border-green-200">
             <div className="text-center">
