@@ -71,27 +71,27 @@ const WorkoutExercise = ({
   return (
     <Card className="p-4">
       <div className="flex justify-between items-center mb-3">
-        <h2 className="font-medium text-lg">{exercise.name}</h2>
+        <h2 className="font-medium text-lg text-foreground">{exercise.name}</h2>
         {isComplete ? (
           <CheckCircle className="h-5 w-5 text-green-500" />
         ) : (
-          <Dumbbell className="h-5 w-5 text-gray-500" />
+          <Dumbbell className="h-5 w-5 text-muted-foreground" />
         )}
       </div>
       
       {/* Exercise details */}
       <div className="grid grid-cols-3 gap-3 mb-4">
-        <div className="bg-gray-50 p-2 rounded text-center">
-          <p className="text-xs text-gray-500">Sets</p>
-          <p className="font-medium">{exercise.sets}</p>
+        <div className="bg-secondary p-2 rounded text-center">
+          <p className="text-xs text-muted-foreground">Sets</p>
+          <p className="font-medium text-foreground">{exercise.sets}</p>
         </div>
-        <div className="bg-gray-50 p-2 rounded text-center">
-          <p className="text-xs text-gray-500">Reps</p>
-          <p className="font-medium">{exercise.reps}</p>
+        <div className="bg-secondary p-2 rounded text-center">
+          <p className="text-xs text-muted-foreground">Reps</p>
+          <p className="font-medium text-foreground">{exercise.reps}</p>
         </div>
-        <div className="bg-gray-50 p-2 rounded text-center relative">
+        <div className="bg-secondary p-2 rounded text-center relative">
           <div className="flex items-center justify-center">
-            <p className="text-xs text-gray-500">Weight</p>
+            <p className="text-xs text-muted-foreground">Weight</p>
             {!editingWeight && (
               <Button
                 variant="ghost"
@@ -124,7 +124,7 @@ const WorkoutExercise = ({
               </Button>
             </div>
           ) : (
-            <p className="font-medium">{exercise.weight || 0} kg</p>
+            <p className="font-medium text-foreground">{exercise.weight || 0} kg</p>
           )}
         </div>
       </div>
@@ -134,8 +134,8 @@ const WorkoutExercise = ({
           {/* Current set tracker */}
           <div className="mb-4">
             <div className="flex justify-between items-center mb-2">
-              <p className="text-sm">Current Set</p>
-              <p className="text-sm font-medium">{currentSet} of {exercise.sets}</p>
+              <p className="text-sm text-foreground">Current Set</p>
+              <p className="text-sm font-medium text-foreground">{currentSet} of {exercise.sets}</p>
             </div>
             <div className="flex space-x-1">
               {Array.from({ length: exercise.sets }).map((_, i) => (
@@ -146,7 +146,7 @@ const WorkoutExercise = ({
                       ? 'bg-green-500'
                       : i + 1 === currentSet
                       ? 'bg-primary'
-                      : 'bg-gray-200'
+                      : 'bg-muted'
                   }`}
                 ></div>
               ))}

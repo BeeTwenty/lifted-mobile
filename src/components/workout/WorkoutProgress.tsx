@@ -15,14 +15,14 @@ const WorkoutProgress: React.FC<WorkoutProgressProps> = ({
   return (
     <div className="mb-4">
       <div className="flex items-center justify-between mb-2">
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-muted-foreground">
           Progress: {completedCount} / {totalCount} exercises
         </p>
-        <p className="text-sm font-medium">
+        <p className="text-sm font-medium text-foreground">
           {percentage}%
         </p>
       </div>
-      <div className="w-full bg-gray-200 rounded-full h-2">
+      <div className="w-full bg-muted rounded-full h-2">
         <div 
           className="bg-primary h-2 rounded-full" 
           style={{ width: `${percentage}%` }}

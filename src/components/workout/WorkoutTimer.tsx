@@ -26,8 +26,8 @@ const WorkoutTimer = ({
   };
 
   return (
-    <Card className="flex items-center px-3 py-1.5 bg-gray-50">
-      <Timer className="h-4 w-4 mr-2 text-gray-500" />
+    <Card className="flex items-center px-3 py-1.5 bg-secondary">
+      <Timer className="h-4 w-4 mr-2 text-muted-foreground" />
       {restTimeRemaining ? (
         <div className="flex items-center flex-1">
           <div className="font-mono font-medium mr-2 text-amber-600">
@@ -45,7 +45,7 @@ const WorkoutTimer = ({
           )}
         </div>
       ) : (
-        <span className="font-mono font-medium mr-2">{formatTime(elapsedTime)}</span>
+        <span className="font-mono font-medium mr-2 text-foreground">{formatTime(elapsedTime)}</span>
       )}
       <Button 
         variant="ghost" 

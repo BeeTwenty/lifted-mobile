@@ -135,4 +135,16 @@
   .dark .bg-white {
     @apply bg-card;
   }
+  
+  /* Fix for blue highlight in workout execution screen */
+  .dark .bg-gray-50,
+  .dark .bg-gray-200 {
+    @apply bg-secondary;
+  }
+  
+  /* Fix workout components text colors */
+  .dark .text-gray-500,
+  .dark [class*="text-gray-"] {
+    @apply text-muted-foreground;
+  }
 }
