@@ -40,7 +40,7 @@ export const sendTestNotification = async (): Promise<boolean> => {
     }
 
     // Generate a unique ID for this notification
-    const notificationId = new Date().getTime();
+    const notificationId = Math.floor(Date.now() + Math.random() * 10000);
     
     // Try multiple notification approaches in sequence until one works
     
@@ -52,7 +52,12 @@ export const sendTestNotification = async (): Promise<boolean> => {
           {
             id: notificationId,
             title: 'Test Notification',
-            body: 'This is a test notification from Lifted app!',
+            body: 'This is a test notification. If you can see this, notifications are working!',
+            ...(isAndroidPlatform() ? {
+              channelId: 'workout-timer',
+              smallIcon: 'ic_stat_icon_config_sample',
+              iconColor: '#488AFF'
+            } : {})
           }
         ]
       });

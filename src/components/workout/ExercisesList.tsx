@@ -1,8 +1,11 @@
+
 import { useEffect } from "react";
 import { Dumbbell } from "lucide-react";
 import ExerciseItem from "./ExerciseItem";
 import { PushNotifications } from "@capacitor/push-notifications";
 import { Capacitor } from "@capacitor/core";
+import { LocalNotifications } from "@capacitor/local-notifications";
+import { toast } from "sonner";
 
 interface Exercise {
   id: string;
@@ -22,17 +25,61 @@ interface ExercisesListProps {
 
 const ExercisesList = ({ exercises, onRemove, onMove, onUpdate }: ExercisesListProps) => {
   useEffect(() => {
-    const requestPermission = async () => {
+    const setupNotifications = async () => {
       if (!Capacitor.isNativePlatform()) return; // Only request on Android/iOS
-      const permStatus = await PushNotifications.requestPermissions();
-      if (permStatus.receive === "granted") {
-        console.log("Notification permission granted");
-      } else {
-        console.warn("Notification permission denied");
+      
+      // First check local notifications (more important for timer)
+      try {
+        console.log("Checking local notification permissions...");
+        const localPermStatus = await LocalNotifications.checkPermissions();
+        
+        if (localPermStatus.display !== 'granted') {
+          console.log("Requesting local notification permissions...");
+          const result = await LocalNotifications.requestPermissions();
+          
+          if (result.display === 'granted') {
+            console.log("Local notification permission granted");
+          } else {
+            console.warn("Local notification permission denied");
+            toast.error("Notifications permission denied", {
+              description: "Workout timer notifications won't work properly",
+              duration: 5000
+            });
+          }
+        } else {
+          console.log("Local notification permission already granted");
+        }
+      } catch (error) {
+        console.error("Error setting up local notifications:", error);
+      }
+      
+      // Then check push notifications
+      try {
+        console.log("Checking push notification permissions...");
+        const pushPermStatus = await PushNotifications.checkPermissions();
+        
+        if (pushPermStatus.receive !== 'granted') {
+          console.log("Requesting push notification permissions...");
+          const pushResult = await PushNotifications.requestPermissions();
+          
+          if (pushResult.receive === 'granted') {
+            console.log("Push notification permission granted");
+            // Register with FCM
+            await PushNotifications.register();
+          } else {
+            console.warn("Push notification permission denied");
+          }
+        } else {
+          console.log("Push notification permission already granted");
+          // Ensure registered with FCM
+          await PushNotifications.register();
+        }
+      } catch (pushError) {
+        console.error("Error setting up push notifications:", pushError);
       }
     };
 
-    requestPermission();
+    setupNotifications();
   }, []); // Runs once when component mounts
 
   if (exercises.length === 0) {

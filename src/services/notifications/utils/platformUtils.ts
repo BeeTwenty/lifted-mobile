@@ -29,7 +29,9 @@ export const getCurrentPlatform = (): string => {
  * @returns boolean indicating if the platform is Android
  */
 export const isAndroidPlatform = (): boolean => {
-  return Capacitor.getPlatform() === 'android';
+  const isAndroid = Capacitor.getPlatform() === 'android';
+  console.log(`Is Android platform: ${isAndroid}`);
+  return isAndroid;
 };
 
 /**
@@ -37,22 +39,29 @@ export const isAndroidPlatform = (): boolean => {
  * @returns boolean indicating if the platform is iOS
  */
 export const isIOSPlatform = (): boolean => {
-  return Capacitor.getPlatform() === 'ios';
+  const isIOS = Capacitor.getPlatform() === 'ios';
+  console.log(`Is iOS platform: ${isIOS}`);
+  return isIOS;
 };
 
 /**
  * Log platform and environment information for debugging
  */
 export const logPlatformInfo = (): void => {
-  const platform = Capacitor.getPlatform();
-  const isNative = Capacitor.isNativePlatform();
-  const webViewVersion = Capacitor.getPlatform() === 'android' ? 
-    (window as any).navigator.userAgent : 'Not available';
-  
-  console.group('Platform Information');
-  console.log(`Platform: ${platform}`);
-  console.log(`Is Native: ${isNative}`);
-  console.log(`User Agent: ${navigator.userAgent}`);
-  console.log(`WebView Info: ${webViewVersion}`);
-  console.groupEnd();
+  try {
+    const platform = Capacitor.getPlatform();
+    const isNative = Capacitor.isNativePlatform();
+    const webViewVersion = Capacitor.getPlatform() === 'android' ? 
+      (window as any).navigator.userAgent : 'Not available';
+    
+    console.group('Platform Information');
+    console.log(`Platform: ${platform}`);
+    console.log(`Is Native: ${isNative}`);
+    console.log(`User Agent: ${navigator.userAgent}`);
+    console.log(`WebView Info: ${webViewVersion}`);
+    console.log(`App version: ${Capacitor.getVersion()}`);
+    console.groupEnd();
+  } catch (error) {
+    console.error('Error logging platform info:', error);
+  }
 };

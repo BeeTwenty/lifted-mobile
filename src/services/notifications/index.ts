@@ -21,7 +21,7 @@ export const initializeNotifications = async (): Promise<void> => {
       // Log platform details for debugging
       logPlatformInfo();
       
-      // Register notification channel
+      // Register notification channel early
       await registerNotificationChannel();
       
       // Add notification received handler
@@ -42,8 +42,9 @@ export const initializeNotifications = async (): Promise<void> => {
       
       // If not granted, immediately request
       if (permissionStatus.display !== 'granted') {
+        console.log('Requesting permissions during initialization...');
         const requestResult = await LocalNotifications.requestPermissions();
-        console.log('Permission request result:', requestResult);
+        console.log('Initial permission request result:', requestResult);
       }
       
       // Test if notifications are working by sending a silent check
