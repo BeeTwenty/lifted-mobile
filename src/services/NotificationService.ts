@@ -34,6 +34,8 @@ export const checkNotificationsSupport = async (): Promise<boolean> => {
     }
 
     console.log('Checking notification permissions...');
+    console.log('Platform:', Capacitor.getPlatform());
+    
     // First check existing permissions
     const { display } = await LocalNotifications.checkPermissions();
     console.log('Current permission status:', display);
@@ -68,14 +70,29 @@ export const scheduleRestEndNotification = async (delay: number): Promise<number
     }
 
     console.log(`Attempting to schedule notification with delay: ${delay} seconds`);
-    const permissionGranted = await checkNotificationsSupport();
-    if (!permissionGranted) {
-      console.log('Notification permission not granted');
-      return null;
+    
+    // Explicitly check permissions here
+    const permissionStatus = await LocalNotifications.checkPermissions();
+    console.log('Permission status before scheduling:', permissionStatus);
+    
+    if (permissionStatus.display !== 'granted') {
+      console.log('Requesting permissions before scheduling...');
+      const requestResult = await LocalNotifications.requestPermissions();
+      console.log('Request result:', requestResult);
+      
+      if (requestResult.display !== 'granted') {
+        console.log('Permission denied after explicit request');
+        return null;
+      }
     }
 
     // Generate a unique ID for this notification
     const notificationId = new Date().getTime();
+    
+    // Ensure the notification channel is created
+    if (Capacitor.getPlatform() === 'android') {
+      await registerNotificationChannel();
+    }
     
     // Schedule the notification with all possible options to ensure delivery
     await LocalNotifications.schedule({
@@ -90,6 +107,7 @@ export const scheduleRestEndNotification = async (delay: number): Promise<number
             allowWhileIdle: true,
           },
           actionTypeId: 'WORKOUT_TIMER',
+          channelId: 'workout-timer',
           ongoing: false,
           autoCancel: true,
           extra: {
@@ -139,24 +157,47 @@ export const sendTestNotification = async (): Promise<boolean> => {
       }
     }
 
+    // Ensure the notification channel is created
+    if (Capacitor.getPlatform() === 'android') {
+      await registerNotificationChannel();
+    }
+
     // Generate a unique ID for this notification
     const notificationId = new Date().getTime();
     
-    // Send an immediate notification with simplified options
-    console.log('Scheduling immediate notification...');
+    // Send an immediate notification
+    console.log('Scheduling immediate test notification...');
+    
+    // First, get all pending notifications
+    const pendingNotifications = await LocalNotifications.getPending();
+    console.log('Pending notifications:', pendingNotifications);
+    
+    // Schedule the notification for 2 seconds in the future
+    // This helps ensure the notification is actually delivered
     await LocalNotifications.schedule({
       notifications: [
         {
           id: notificationId,
           title: 'Test Notification',
           body: 'This is a test notification from Lifted app!',
-          schedule: { at: new Date(Date.now() + 1000) }, // Schedule for 1 second in the future instead of immediately
-          sound: null, // Try without sound to see if that's causing issues
+          schedule: { at: new Date(Date.now() + 2000) },
+          sound: 'default',
+          channelId: 'workout-timer',
+          ongoing: false,
+          smallIcon: 'ic_stat_icon_config_sample',
+          iconColor: '#488AFF',
         }
       ]
     });
 
     console.log(`Test notification sent with ID: ${notificationId}`);
+    
+    // Return list of registered notification channels
+    if (Capacitor.getPlatform() === 'android') {
+      const channels = await LocalNotifications.listChannels();
+      console.log('Available notification channels:', channels);
+    }
+    
     return true;
   } catch (error) {
     console.error('Error sending test notification:', error);
@@ -185,6 +226,7 @@ export const cancelNotification = async (notificationId: number): Promise<void> 
 export const registerNotificationChannel = async (): Promise<void> => {
   if (Capacitor.getPlatform() === 'android') {
     try {
+      console.log('Creating notification channel for Android...');
       await LocalNotifications.createChannel({
         id: 'workout-timer',
         name: 'Workout Timer',
@@ -196,7 +238,11 @@ export const registerNotificationChannel = async (): Promise<void> => {
         lights: true,
         lightColor: '#FF0000' // Red light for visibility
       });
-      console.log('Android notification channel created');
+      console.log('Android notification channel created successfully');
+      
+      // List channels to verify
+      const channels = await LocalNotifications.listChannels();
+      console.log('Available notification channels:', channels);
     } catch (error) {
       console.error('Error creating notification channel:', error);
     }
@@ -207,7 +253,9 @@ export const registerNotificationChannel = async (): Promise<void> => {
 export const initializeNotifications = async (): Promise<void> => {
   if (Capacitor.isNativePlatform()) {
     try {
-      // Register for push notifications
+      console.log('Initializing notifications...');
+      
+      // Register notification channel
       await registerNotificationChannel();
       
       // Add notification received handler
@@ -221,6 +269,10 @@ export const initializeNotifications = async (): Promise<void> => {
       });
       
       console.log('Notification listeners registered');
+      
+      // Pre-check permissions on initialization
+      const permissionStatus = await LocalNotifications.checkPermissions();
+      console.log('Initial notification permission status:', permissionStatus);
     } catch (error) {
       console.error('Error initializing notifications:', error);
     }

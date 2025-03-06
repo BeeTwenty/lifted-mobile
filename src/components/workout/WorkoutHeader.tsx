@@ -64,13 +64,17 @@ const WorkoutHeader = ({
         return;
       }
       
+      console.log("Testing notification delivery...");
       const sent = await sendTestNotification();
+      
       if (sent) {
         toast.success("Test notification sent!", {
           description: "Please check your notification panel in a moment",
           duration: 3000,
         });
+        console.log("Test notification scheduled successfully");
       } else {
+        console.error("Failed to send notification");
         toast.error("Failed to send notification", {
           description: "Please check app permissions in device settings",
           duration: 5000,
@@ -83,7 +87,9 @@ const WorkoutHeader = ({
         duration: 3000,
       });
     } finally {
-      setIsSendingNotification(false);
+      setTimeout(() => {
+        setIsSendingNotification(false);
+      }, 3000); // Keep loading state for at least 3 seconds
     }
   };
 
@@ -113,14 +119,14 @@ const WorkoutHeader = ({
       <Button 
         variant="outline" 
         size="sm" 
-        className="self-end" 
+        className="self-end flex items-center gap-2" 
         onClick={handleTestNotification}
         disabled={isSendingNotification}
       >
         {isSendingNotification ? (
-          <span className="animate-spin mr-2">⟳</span>
+          <span className="animate-spin">⟳</span>
         ) : (
-          <Bell className="h-4 w-4 mr-2" />
+          <Bell className="h-4 w-4" />
         )}
         {isSendingNotification ? "Sending..." : "Test Notification"}
       </Button>

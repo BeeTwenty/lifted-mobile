@@ -31,6 +31,19 @@ const config: CapacitorConfig = {
       pressAction: {
         id: "default",
         launchActivity: "MainActivity"
+      },
+      visibility: "public",
+      // Make Android create a notification channel by default
+      androidChannelEnabled: true,
+      androidChannelConfig: {
+        id: "workout-timer",
+        name: "Workout Timer",
+        description: "Notifications for workout timers",
+        importance: "high",
+        visibility: "public",
+        sound: "default",
+        vibration: true,
+        lights: true
       }
     }
   },
