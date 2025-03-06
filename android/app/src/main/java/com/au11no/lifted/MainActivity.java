@@ -1,3 +1,4 @@
+
 package com.au11no.lifted;
 
 import com.getcapacitor.BridgeActivity;

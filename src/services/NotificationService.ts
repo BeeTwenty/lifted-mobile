@@ -1,3 +1,4 @@
+
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { Capacitor } from '@capacitor/core';
 
@@ -27,16 +28,23 @@ const getRandomMessage = (): string => {
 export const checkNotificationsSupport = async (): Promise<boolean> => {
   // When running in a browser that doesn't support Capacitor
   if (!Capacitor.isNativePlatform()) {
+    console.log('Not running on native platform, skipping notifications');
     return false;
   }
 
   try {
+    console.log('Checking notification permissions...');
     const { display } = await LocalNotifications.checkPermissions();
+    console.log('Current permission status:', display);
+    
     if (display === 'granted') {
       return true;
     }
     
+    console.log('Requesting notification permissions...');
     const { display: requestedPermission } = await LocalNotifications.requestPermissions();
+    console.log('Requested permission result:', requestedPermission);
+    
     return requestedPermission === 'granted';
   } catch (error) {
     console.error('Error checking notification permissions:', error);
@@ -57,6 +65,7 @@ export const scheduleRestEndNotification = async (delay: number): Promise<number
   }
 
   try {
+    console.log(`Attempting to schedule notification with delay: ${delay} seconds`);
     const permissionGranted = await checkNotificationsSupport();
     if (!permissionGranted) {
       console.log('Notification permission not granted');
@@ -73,7 +82,7 @@ export const scheduleRestEndNotification = async (delay: number): Promise<number
           id: notificationId,
           title: 'Rest Complete',
           body: getRandomMessage(),
-          sound: 'notification.mp3',
+          sound: true,
           schedule: { at: new Date(Date.now() + delay * 1000) },
           actionTypeId: 'WORKOUT_TIMER',
           extra: {
@@ -83,6 +92,7 @@ export const scheduleRestEndNotification = async (delay: number): Promise<number
       ]
     });
 
+    console.log(`Notification scheduled with ID: ${notificationId}`);
     return notificationId;
   } catch (error) {
     console.error('Error scheduling notification:', error);
@@ -100,8 +110,54 @@ export const cancelNotification = async (notificationId: number): Promise<void> 
   }
 
   try {
+    console.log(`Cancelling notification with ID: ${notificationId}`);
     await LocalNotifications.cancel({ notifications: [{ id: notificationId }] });
   } catch (error) {
     console.error('Error cancelling notification:', error);
+  }
+};
+
+// Register notification channel for Android
+export const registerNotificationChannel = async (): Promise<void> => {
+  if (Capacitor.getPlatform() === 'android') {
+    try {
+      await LocalNotifications.createChannel({
+        id: 'workout-timer',
+        name: 'Workout Timer',
+        description: 'Notifications for workout rest timers',
+        importance: 5,
+        visibility: 1,
+        sound: 'notification.mp3',
+        vibration: true,
+        lights: true
+      });
+      console.log('Android notification channel created');
+    } catch (error) {
+      console.error('Error creating notification channel:', error);
+    }
+  }
+};
+
+// Initialize notifications
+export const initializeNotifications = async (): Promise<void> => {
+  if (Capacitor.isNativePlatform()) {
+    try {
+      // Register for push notifications
+      await registerNotificationChannel();
+      
+      // Add notification received handler
+      LocalNotifications.addListener('localNotificationReceived', (notification) => {
+        console.log('Notification received:', notification);
+      });
+      
+      // Add notification action performed handler
+      LocalNotifications.addListener('localNotificationActionPerformed', (notificationAction) => {
+        console.log('Notification action performed:', notificationAction);
+      });
+      
+      console.log('Notification listeners registered');
+    } catch (error) {
+      console.error('Error initializing notifications:', error);
+    }
   }
 };
