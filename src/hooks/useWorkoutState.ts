@@ -18,7 +18,9 @@ interface Exercise {
   reps: number;
   weight?: number;
   notes?: string;
-  order?: number; // Added the order property
+  order?: number;
+  workout_id: string;
+  rest_time: number | null;
 }
 
 export const useWorkoutState = (workout: Workout | null, exercises: Exercise[], userId: string | undefined) => {
@@ -63,7 +65,7 @@ export const useWorkoutState = (workout: Workout | null, exercises: Exercise[], 
     }
   };
 
-  const updateExerciseWeight = (exerciseId: string, newWeight: number, exercisesData: Exercise[], setExercisesData: (exercises: Exercise[]) => void) => {
+  const updateExerciseWeight = (exerciseId: string, newWeight: number, exercisesData: Exercise[], setExercisesData: React.Dispatch<React.SetStateAction<Exercise[]>>) => {
     setExercisesData(exercisesData.map(exercise => 
       exercise.id === exerciseId 
         ? { ...exercise, weight: newWeight } 

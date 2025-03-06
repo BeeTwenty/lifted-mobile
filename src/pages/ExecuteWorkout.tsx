@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -30,7 +31,7 @@ interface Exercise {
   notes?: string;
   order?: number;
   workout_id: string;
-  rest_time: number;
+  rest_time: number | null;
 }
 
 const ExecuteWorkout = () => {
