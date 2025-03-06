@@ -91,15 +91,15 @@ const ExecuteWorkout = () => {
           .from('exercises')
           .select('*')
           .eq('workout_id', id)
-          .order('id', { ascending: true });
+          .order('order', { ascending: true });
         
         if (exercisesError) throw exercisesError;
         
         const sortedExercises = exercisesData ? [...exercisesData].sort((a, b) => {
-          if (a.order !== null && b.order !== null && a.order !== undefined && b.order !== undefined) {
-            return a.order - b.order;
-          }
-          return 0;
+          // Handle undefined order values by treating them as largest (they go to the end)
+          const orderA = a.order !== undefined && a.order !== null ? a.order : Number.MAX_SAFE_INTEGER;
+          const orderB = b.order !== undefined && b.order !== null ? b.order : Number.MAX_SAFE_INTEGER;
+          return orderA - orderB;
         }) : [];
         
         setExercises(sortedExercises);
