@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { scheduleRestEndNotification, cancelNotification } from "@/services/NotificationService";
 
@@ -30,7 +29,7 @@ export const useWorkoutTimer = (initialRunningState = false) => {
   useEffect(() => {
     if (restTimeRemaining !== null && restTimeRemaining > 0) {
       // Schedule notification when rest timer starts
-      if (restTimeRemaining === (notificationIdRef.current === null) && notificationIdRef.current === null) {
+      if (restTimeRemaining && notificationIdRef.current === null) {
         scheduleRestEndNotification(restTimeRemaining).then(id => {
           if (id) notificationIdRef.current = id;
         });

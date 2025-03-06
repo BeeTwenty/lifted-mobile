@@ -1,6 +1,5 @@
-
 import { LocalNotifications } from '@capacitor/local-notifications';
-import { isPlatform } from '@capacitor/core';
+import { Capacitor } from '@capacitor/core';
 
 // Collection of motivational messages
 const motivationalMessages = [
@@ -27,7 +26,7 @@ const getRandomMessage = (): string => {
  */
 export const checkNotificationsSupport = async (): Promise<boolean> => {
   // When running in a browser that doesn't support Capacitor
-  if (!isPlatform('android') && !isPlatform('ios')) {
+  if (!Capacitor.isNativePlatform()) {
     return false;
   }
 
@@ -52,7 +51,7 @@ export const checkNotificationsSupport = async (): Promise<boolean> => {
  */
 export const scheduleRestEndNotification = async (delay: number): Promise<number | null> => {
   // Only attempt to schedule if we're running on a supported platform
-  if (!isPlatform('android') && !isPlatform('ios')) {
+  if (!Capacitor.isNativePlatform()) {
     console.log('Notifications not supported in this environment');
     return null;
   }
@@ -96,7 +95,7 @@ export const scheduleRestEndNotification = async (delay: number): Promise<number
  * @param notificationId The ID of the notification to cancel
  */
 export const cancelNotification = async (notificationId: number): Promise<void> => {
-  if (!isPlatform('android') && !isPlatform('ios')) {
+  if (!Capacitor.isNativePlatform()) {
     return;
   }
 
