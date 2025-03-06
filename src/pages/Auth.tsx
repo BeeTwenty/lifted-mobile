@@ -35,7 +35,7 @@ const Auth = () => {
         <div className="flex items-center justify-center mb-2">
           <Dumbbell className="h-10 w-10 text-primary" />
         </div>
-        <h1 className="text-3xl font-bold">StrengthScribe</h1>
+        <h1 className="text-3xl font-bold">Lifted</h1>
         <p className="text-gray-600">Track your workouts and achieve your goals</p>
       </div>
 

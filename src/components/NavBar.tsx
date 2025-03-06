@@ -23,7 +23,7 @@ const NavBar = () => {
     <header className="bg-white border-b sticky top-0 z-10">
       <div className="max-w-md mx-auto px-4">
         <div className="flex justify-between items-center h-14">
-          <Link to="/" className="font-semibold text-lg">Workoutorium</Link>
+          <Link to="/" className="font-semibold text-lg">Lifted</Link>
           
           <nav className="flex items-center gap-1">
             <Link 
