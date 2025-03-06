@@ -77,7 +77,7 @@ const ProfileForm = ({ user }: ProfileFormProps) => {
           bio: profile.bio,
           height: profile.height ? Number(profile.height) : null,
           age: profile.age ? Number(profile.age) : null,
-          updated_at: new Date()
+          updated_at: new Date().toISOString() // Convert Date to ISO string
         })
         .eq('id', user.id);
         
