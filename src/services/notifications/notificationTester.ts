@@ -1,120 +1,130 @@
 
 import { LocalNotifications } from '@capacitor/local-notifications';
-import { isNativePlatform, isAndroidPlatform, logPlatformInfo } from './utils/platformUtils';
+import { PushNotifications } from '@capacitor/push-notifications';
+import { Capacitor } from '@capacitor/core';
+import { isNativePlatform, isAndroidPlatform } from './utils/platformUtils';
+import { getRandomMessage } from './utils/notificationMessages';
 import { registerNotificationChannel } from './notificationChannels';
 
 /**
- * Send an immediate test notification
- * This is useful for testing notification permissions and delivery
+ * Send a test notification to verify notifications are working
+ * @returns Promise<boolean> indicating if the notification was sent successfully
  */
 export const sendTestNotification = async (): Promise<boolean> => {
   try {
-    // Log detailed information for debugging
-    logPlatformInfo();
-    console.log('Testing notification support...');
-
+    // Check if running on a native platform
     if (!isNativePlatform()) {
-      console.log('Notifications not supported in browser environment');
+      console.log('Not on native platform, cannot send test notification');
       return false;
     }
 
-    // Get notification permissions
-    console.log('Sending test notification - checking permissions first...');
-    const permissionCheck = await LocalNotifications.checkPermissions();
-    console.log('Permission status:', permissionCheck);
+    console.log('Sending test notification...');
     
-    if (permissionCheck.display !== 'granted') {
-      console.log('Requesting permissions explicitly...');
-      const requestResult = await LocalNotifications.requestPermissions();
-      console.log('Request result:', requestResult);
-      
-      if (requestResult.display !== 'granted') {
-        console.log('Permission denied after explicit request');
-        return false;
+    // For Android, check and register with Firebase first
+    if (isAndroidPlatform()) {
+      try {
+        console.log('Checking and registering for push notifications on Android...');
+        
+        // Check Firebase registration
+        const pushPermStatus = await PushNotifications.checkPermissions();
+        console.log('Push permission status:', pushPermStatus);
+        
+        if (pushPermStatus.receive !== 'granted') {
+          console.log('Requesting push notification permissions...');
+          const pushResult = await PushNotifications.requestPermissions();
+          console.log('Push permission request result:', pushResult);
+          
+          if (pushResult.receive === 'granted') {
+            console.log('Push notification permission granted, registering with FCM...');
+            await PushNotifications.register();
+          } else {
+            console.warn('Push notification permission denied');
+          }
+        } else {
+          console.log('Push permissions already granted, registering with FCM...');
+          await PushNotifications.register();
+        }
+      } catch (error) {
+        console.error('Error setting up Firebase for push notifications:', error);
+        // Continue to send local notification as fallback
       }
     }
-
-    // Ensure the notification channel is created
+    
+    // Create notification channel for Android
     if (isAndroidPlatform()) {
       await registerNotificationChannel();
     }
-
-    // Generate a unique ID for this notification
-    const notificationId = Math.floor(Date.now() + Math.random() * 10000);
     
-    // Try multiple notification approaches in sequence until one works
+    // Check local notification permissions
+    const permStatus = await LocalNotifications.checkPermissions();
+    console.log('Local notification permission status:', permStatus);
     
-    // 1. Try immediate notification with minimal properties
-    try {
-      console.log('Attempting immediate basic notification...');
-      await LocalNotifications.schedule({
-        notifications: [
-          {
-            id: notificationId,
-            title: 'Test Notification',
-            body: 'This is a test notification. If you can see this, notifications are working!',
-            ...(isAndroidPlatform() ? {
-              channelId: 'workout-timer',
-              smallIcon: 'ic_stat_icon_config_sample',
-              iconColor: '#488AFF'
-            } : {})
-          }
-        ]
-      });
-      console.log('Immediate basic notification sent');
-      return true;
-    } catch (error) {
-      console.warn('Basic notification failed:', error);
+    if (permStatus.display !== 'granted') {
+      console.log('Requesting local notification permissions...');
+      const requestResult = await LocalNotifications.requestPermissions();
+      console.log('Local notification permission request result:', requestResult);
       
-      // 2. Try with short delay (2 seconds)
-      try {
-        console.log('Attempting short-delay notification...');
-        const delayTime = new Date(Date.now() + 2000);
-        await LocalNotifications.schedule({
-          notifications: [
-            {
-              id: notificationId + 1,
-              title: 'Test Notification (Delayed)',
-              body: 'This is a delayed test notification!',
-              schedule: { at: delayTime }
-            }
-          ]
-        });
-        console.log('Short-delay notification scheduled');
-        return true;
-      } catch (error2) {
-        console.warn('Short-delay notification failed:', error2);
-        
-        // 3. Try with Android-specific options
-        if (isAndroidPlatform()) {
-          try {
-            console.log('Attempting Android-specific notification...');
-            await LocalNotifications.schedule({
-              notifications: [
-                {
-                  id: notificationId + 2,
-                  title: 'Test Notification (Android)',
-                  body: 'Android test notification with channel',
-                  schedule: { at: new Date(Date.now() + 3000) },
-                  channelId: 'workout-timer',
-                  smallIcon: 'ic_stat_icon_config_sample',
-                  largeIcon: 'ic_stat_icon_config_sample',
-                  iconColor: '#488AFF'
-                }
-              ]
-            });
-            console.log('Android-specific notification scheduled');
-            return true;
-          } catch (error3) {
-            console.error('All notification attempts failed:', error3);
-            return false;
-          }
-        }
+      if (requestResult.display !== 'granted') {
+        console.log('Local notification permission denied');
         return false;
       }
     }
+    
+    // Send a test notification that appears immediately
+    const notificationId = new Date().getTime();
+    await LocalNotifications.schedule({
+      notifications: [{
+        id: notificationId,
+        title: 'Test Notification',
+        body: getRandomMessage(),
+        // Schedule for 2 seconds from now
+        schedule: { at: new Date(Date.now() + 2000) },
+        // Android specific options
+        ...(isAndroidPlatform() ? {
+          channelId: 'workout-timer',
+          smallIcon: 'ic_stat_icon_config_sample',
+          iconColor: '#488AFF'
+        } : {})
+      }]
+    });
+    
+    console.log(`Test notification scheduled with ID: ${notificationId}`);
+    return true;
   } catch (error) {
     console.error('Error sending test notification:', error);
     return false;
+  }
+};
+
+// Initialize Push Notification listeners
+export const initializePushListeners = async (): Promise<void> => {
+  if (!isNativePlatform()) return;
+  
+  try {
+    console.log('Initializing push notification listeners...');
+    
+    // Register with FCM
+    PushNotifications.addListener('registration', (token) => {
+      console.log('Push registration success, token:', token.value);
+    });
+    
+    // Handle registration errors
+    PushNotifications.addListener('registrationError', (error) => {
+      console.error('Push registration error:', error);
+    });
+    
+    // Handle push notification received
+    PushNotifications.addListener('pushNotificationReceived', (notification) => {
+      console.log('Push notification received:', notification);
+    });
+    
+    // Handle when user taps on notification
+    PushNotifications.addListener('pushNotificationActionPerformed', (action) => {
+      console.log('Push notification action performed:', action);
+    });
+    
+    console.log('Push notification listeners registered');
+  } catch (error) {
+    console.error('Error initializing push notification listeners:', error);
   }
 };

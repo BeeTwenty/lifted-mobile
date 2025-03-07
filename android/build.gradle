@@ -25,7 +25,7 @@ allprojects {
     }
 }
 
-// Update the deprecated Delete task to use the newer Delete.delete method
+// Update the clean task to use the newer syntax
 tasks.register('clean', Delete) {
-    delete rootProject.buildDir
+    delete = [rootProject.buildDir]
 }

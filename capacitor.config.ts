@@ -59,6 +59,7 @@ const config: CapacitorConfig = {
     },
     PushNotifications: {
       presentationOptions: ["badge", "sound", "alert"],
+      firebaseAutoInit: true
     }
   },
   bundledWebRuntime: false

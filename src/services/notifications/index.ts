@@ -1,12 +1,13 @@
 
 import { LocalNotifications } from '@capacitor/local-notifications';
+import { PushNotifications } from '@capacitor/push-notifications';
 import { registerNotificationChannel } from './notificationChannels';
 import { isNativePlatform, logPlatformInfo } from './utils/platformUtils';
 
 // Re-export all the notification modules
 export { checkNotificationsSupport } from './notificationPermissions';
 export { scheduleRestEndNotification, cancelNotification } from './notificationScheduler';
-export { sendTestNotification } from './notificationTester';
+export { sendTestNotification, initializePushListeners } from './notificationTester';
 export { registerNotificationChannel } from './notificationChannels';
 
 /**
@@ -34,7 +35,10 @@ export const initializeNotifications = async (): Promise<void> => {
         console.log('Notification action performed:', notificationAction);
       });
       
-      console.log('Notification listeners registered');
+      console.log('Local notification listeners registered');
+      
+      // Initialize push notification listeners
+      await initializePushListeners();
       
       // Pre-check permissions on initialization
       const permissionStatus = await LocalNotifications.checkPermissions();
@@ -45,6 +49,29 @@ export const initializeNotifications = async (): Promise<void> => {
         console.log('Requesting permissions during initialization...');
         const requestResult = await LocalNotifications.requestPermissions();
         console.log('Initial permission request result:', requestResult);
+      }
+      
+      // Check push notification permissions
+      try {
+        console.log('Checking push notification permissions...');
+        const pushPermStatus = await PushNotifications.checkPermissions();
+        console.log('Push permission status:', pushPermStatus);
+        
+        if (pushPermStatus.receive !== 'granted') {
+          console.log('Requesting push notification permissions...');
+          const pushResult = await PushNotifications.requestPermissions();
+          console.log('Push permission request result:', pushResult);
+          
+          if (pushResult.receive === 'granted') {
+            console.log('Push notification permission granted, registering with FCM...');
+            await PushNotifications.register();
+          }
+        } else {
+          console.log('Push permissions already granted, registering with FCM...');
+          await PushNotifications.register();
+        }
+      } catch (pushError) {
+        console.error('Error setting up push notifications:', pushError);
       }
       
       // Test if notifications are working by sending a silent check
