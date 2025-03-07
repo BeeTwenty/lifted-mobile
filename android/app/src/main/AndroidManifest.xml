@@ -44,15 +44,18 @@
         </provider>
         
         <!-- Receiver for notification taps -->
-        <receiver android:name="com.getcapacitor.plugin.notification.NotificationActionReceiver" android:exported="true"/>
+        <receiver android:name="com.getcapacitor.plugin.notification.NotificationActionReceiver" android:exported="true"
+            tools:ignore="MissingClass" />
         
         <!-- Receiver for notifications -->
-        <receiver android:name="com.getcapacitor.plugin.notification.TimedNotificationPublisher" android:exported="true"/>
+        <receiver android:name="com.getcapacitor.plugin.notification.TimedNotificationPublisher" android:exported="true"
+            tools:ignore="MissingClass" />
         
         <!-- Notification Service -->
         <service
             android:name="com.getcapacitor.plugin.background.BackgroundService"
-            android:exported="false" />
+            android:exported="false"
+            tools:ignore="MissingClass" />
     </application>
 
     <!-- Permissions -->
@@ -67,5 +70,6 @@
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
-    <uses-permission android:name="android.permission.NOTIFICATION_DURING_SETUP" />
+    <uses-permission android:name="android.permission.NOTIFICATION_DURING_SETUP"
+        tools:ignore="ProtectedPermissions" />
 </manifest>
