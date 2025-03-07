@@ -46,9 +46,9 @@ dependencies {
     implementation "androidx.work:work-runtime:2.8.1"
     
     // Firebase dependencies for notifications
-    implementation 'com.google.firebase:firebase-messaging:23.3.1'
-    implementation 'com.google.firebase:firebase-analytics:21.5.0'
-    implementation 'androidx.core:core:1.12.0'
+    implementation 'com.google.firebase:firebase-messaging:23.2.1'
+    implementation 'com.google.firebase:firebase-analytics:21.3.0'
+    implementation 'androidx.core:core:1.10.1'
     
     implementation project(':capacitor-android')
     testImplementation "junit:junit:$junitVersion"
