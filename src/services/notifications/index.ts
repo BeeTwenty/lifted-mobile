@@ -3,6 +3,7 @@ import { LocalNotifications } from '@capacitor/local-notifications';
 import { PushNotifications } from '@capacitor/push-notifications';
 import { registerNotificationChannel } from './notificationChannels';
 import { isNativePlatform, logPlatformInfo } from './utils/platformUtils';
+import { initializePushListeners } from './notificationTester';
 
 // Re-export all the notification modules
 export { checkNotificationsSupport } from './notificationPermissions';
