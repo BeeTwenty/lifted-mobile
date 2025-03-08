@@ -1,10 +1,32 @@
-
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { PushNotifications } from '@capacitor/push-notifications';
-import { Capacitor } from '@capacitor/core';
+import { Preferences } from '@capacitor/preferences';
 import { isNativePlatform, isAndroidPlatform } from './utils/platformUtils';
 import { getRandomMessage } from './utils/notificationMessages';
 import { registerNotificationChannel } from './notificationChannels';
+
+const NOTIFICATION_ID_KEY = "lastNotificationId"; // Key for storing last ID in Preferences
+
+/**
+ * Generate a unique, persistent notification ID
+ */
+const getNextNotificationId = async (): Promise<number> => {
+  const { value } = await Preferences.get({ key: NOTIFICATION_ID_KEY });
+
+  let lastId = value ? parseInt(value, 10) : 0;
+  let nextId = lastId + 1;
+
+  // Keep it within a safe range (0 - 100,000)
+  if (nextId > 100000) {
+    nextId = 1; // Reset to 1 if exceeded
+  }
+
+  // Save the new last ID
+  await Preferences.set({ key: NOTIFICATION_ID_KEY, value: nextId.toString() });
+
+  console.log("Generated new notification ID:", nextId);
+  return nextId;
+};
 
 /**
  * Send a test notification to verify notifications are working
@@ -12,23 +34,20 @@ import { registerNotificationChannel } from './notificationChannels';
  */
 export const sendTestNotification = async (): Promise<boolean> => {
   try {
-    // Check if running on a native platform
     if (!isNativePlatform()) {
       console.log('Not on native platform, cannot send test notification');
       return false;
     }
 
     console.log('Sending test notification...');
-    
-    // For Android, check and register with Firebase first
+
     if (isAndroidPlatform()) {
       try {
         console.log('Checking and registering for push notifications on Android...');
         
-        // Check Firebase registration
         const pushPermStatus = await PushNotifications.checkPermissions();
         console.log('Push permission status:', pushPermStatus);
-        
+
         if (pushPermStatus.receive !== 'granted') {
           console.log('Requesting push notification permissions...');
           const pushResult = await PushNotifications.requestPermissions();
@@ -46,19 +65,16 @@ export const sendTestNotification = async (): Promise<boolean> => {
         }
       } catch (error) {
         console.error('Error setting up Firebase for push notifications:', error);
-        // Continue to send local notification as fallback
       }
     }
-    
-    // Create notification channel for Android
+
     if (isAndroidPlatform()) {
       await registerNotificationChannel();
     }
-    
-    // Check local notification permissions
+
     const permStatus = await LocalNotifications.checkPermissions();
     console.log('Local notification permission status:', permStatus);
-    
+
     if (permStatus.display !== 'granted') {
       console.log('Requesting local notification permissions...');
       const requestResult = await LocalNotifications.requestPermissions();
@@ -69,17 +85,17 @@ export const sendTestNotification = async (): Promise<boolean> => {
         return false;
       }
     }
-    
-    // Send a test notification that appears immediately
-    const notificationId = new Date().getTime();
+
+    // ✅ Get a persistent, unique notification ID
+    const notificationId = 123;
+    console.log("Type of notification ID before scheduling:", typeof notificationId);
+
     await LocalNotifications.schedule({
       notifications: [{
-        id: notificationId,
+        id: notificationId,  // ✅ Safe, persistent ID
         title: 'Test Notification',
         body: getRandomMessage(),
-        // Schedule for 2 seconds from now
-        schedule: { at: new Date(Date.now() + 2000) },
-        // Android specific options
+        schedule: { at: new Date(Date.now() + 2000) }, // Show after 2 seconds
         ...(isAndroidPlatform() ? {
           channelId: 'workout-timer',
           smallIcon: 'ic_stat_icon_config_sample',
@@ -87,7 +103,7 @@ export const sendTestNotification = async (): Promise<boolean> => {
         } : {})
       }]
     });
-    
+
     console.log(`Test notification scheduled with ID: ${notificationId}`);
     return true;
   } catch (error) {
@@ -96,7 +112,9 @@ export const sendTestNotification = async (): Promise<boolean> => {
   }
 };
 
-// Initialize Push Notification listeners
+/**
+ * Initialize Push Notification listeners
+ */
 export const initializePushListeners = async (): Promise<void> => {
   if (!isNativePlatform()) return;
   
