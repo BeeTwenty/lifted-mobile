@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -15,36 +14,50 @@ import NotFound from "./pages/NotFound";
 import EditWorkout from "./pages/EditWorkout";
 import WeightTracker from "./pages/WeightTracker";
 import Settings from "./pages/Settings";
+import { BackgroundMode } from "@awesome-cordova-plugins/background-mode";
+import { useEffect } from "react";
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <ThemeProvider>
-        <Toaster />
-        <Sonner />
-        <Router>
-          <AuthProvider>
-            <Routes>
-              <Route path="/auth" element={<Auth />} />
-              
-              <Route element={<ProtectedRoute />}>
-                <Route path="/" element={<Dashboard />} />
-                <Route path="/create-workout" element={<CreateWorkout />} />
-                <Route path="/edit-workout/:id" element={<EditWorkout />} />
-                <Route path="/execute-workout/:id" element={<ExecuteWorkout />} />
-                <Route path="/weight-tracker" element={<WeightTracker />} />
-                <Route path="/settings" element={<Settings />} />
-              </Route>
-              
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </AuthProvider>
-        </Router>
-      </ThemeProvider>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+const App = () => {
+  useEffect(() => {
+    // Ensure BackgroundMode only runs when the device is ready
+    document.addEventListener("deviceready", () => {
+      BackgroundMode.enable();
+
+      BackgroundMode.on("activate");
+      BackgroundMode.on("deactivate");
+    });
+  }, []);
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <ThemeProvider>
+          <Toaster />
+          <Sonner />
+          <Router>
+            <AuthProvider>
+              <Routes>
+                <Route path="/auth" element={<Auth />} />
+
+                <Route element={<ProtectedRoute />}>
+                  <Route path="/" element={<Dashboard />} />
+                  <Route path="/create-workout" element={<CreateWorkout />} />
+                  <Route path="/edit-workout/:id" element={<EditWorkout />} />
+                  <Route path="/execute-workout/:id" element={<ExecuteWorkout />} />
+                  <Route path="/weight-tracker" element={<WeightTracker />} />
+                  <Route path="/settings" element={<Settings />} />
+                </Route>
+
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </AuthProvider>
+          </Router>
+        </ThemeProvider>
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;
