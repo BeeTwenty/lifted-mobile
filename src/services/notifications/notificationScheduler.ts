@@ -1,3 +1,4 @@
+
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { isNativePlatform, isAndroidPlatform, logPlatformInfo } from './utils/platformUtils';
 import { getRandomMessage } from './utils/notificationMessages';
@@ -64,7 +65,7 @@ export const scheduleRestEndNotification = async (delay: number): Promise<number
       }
     }
 
-    // Use fixed small ID for rest notification (definitely within Java int range)
+    // Use a hardcoded small ID that is definitely within Java int range
     const notificationId = 101;
     console.log("Using fixed notification ID:", notificationId, "type:", typeof notificationId);
 

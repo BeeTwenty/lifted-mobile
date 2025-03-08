@@ -1,3 +1,4 @@
+
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { PushNotifications } from '@capacitor/push-notifications';
 import { Preferences } from '@capacitor/preferences';
@@ -93,8 +94,9 @@ export const sendTestNotification = async (): Promise<boolean> => {
       }
     }
 
-    // Get a fixed small notification ID (definitely within Java int range)
-    const notificationId = 42; // Fixed small integer for testing
+    // Use a hardcoded small number for the notification ID
+    // This ensures it's definitely within Java int range
+    const notificationId = 42;
     console.log("Using fixed notification ID:", notificationId, "type:", typeof notificationId);
 
     await LocalNotifications.schedule({
