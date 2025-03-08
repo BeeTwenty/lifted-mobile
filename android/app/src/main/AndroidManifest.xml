@@ -51,7 +51,9 @@
             android:exported="false" />
 
         <!-- ✅ Automatically Restart App on Reboot -->
-        <receiver android:name="de.appplant.cordova.plugin.background.RestartService">
+        <receiver
+            android:name="de.appplant.cordova.plugin.background.RestartService"
+            android:exported="true">   <!-- ✅ Explicitly set android:exported -->
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED"/>
             </intent-filter>
