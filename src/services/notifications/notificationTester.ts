@@ -1,4 +1,3 @@
-
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { PushNotifications } from '@capacitor/push-notifications';
 import { Preferences } from '@capacitor/preferences';
@@ -12,21 +11,28 @@ const NOTIFICATION_ID_KEY = "lastNotificationId"; // Key for storing last ID in 
  * Generate a unique, persistent notification ID
  */
 const getNextNotificationId = async (): Promise<number> => {
-  const { value } = await Preferences.get({ key: NOTIFICATION_ID_KEY });
-
-  let lastId = value ? parseInt(value, 10) : 0;
-  let nextId = lastId + 1;
-
-  // Keep it within a safe range (0 - 100,000)
-  if (nextId > 100000) {
-    nextId = 1; // Reset to 1 if exceeded
+  try {
+    const { value } = await Preferences.get({ key: NOTIFICATION_ID_KEY });
+    
+    // Start from 1 or increment the last value
+    let lastId = value ? parseInt(value, 10) : 0;
+    let nextId = lastId + 1;
+    
+    // Keep it smaller than 10000 to ensure it's well within Java int range
+    if (nextId > 10000) {
+      nextId = 1; // Reset to 1 if exceeded
+    }
+    
+    // Save the new ID
+    await Preferences.set({ key: NOTIFICATION_ID_KEY, value: nextId.toString() });
+    
+    console.log("Generated new notification ID:", nextId, "type:", typeof nextId);
+    return nextId;
+  } catch (error) {
+    console.error("Error generating notification ID:", error);
+    // Fallback to a very safe small number if anything goes wrong
+    return 42;
   }
-
-  // Save the new last ID
-  await Preferences.set({ key: NOTIFICATION_ID_KEY, value: nextId.toString() });
-
-  console.log("Generated new notification ID:", nextId);
-  return nextId;
 };
 
 /**
@@ -87,13 +93,13 @@ export const sendTestNotification = async (): Promise<boolean> => {
       }
     }
 
-    // Get a unique notification ID (must be within Java int range)
-    const notificationId = await getNextNotificationId();
-    console.log("Type of notification ID before scheduling:", typeof notificationId, notificationId);
+    // Get a fixed small notification ID (definitely within Java int range)
+    const notificationId = 42; // Fixed small integer for testing
+    console.log("Using fixed notification ID:", notificationId, "type:", typeof notificationId);
 
     await LocalNotifications.schedule({
       notifications: [{
-        id: notificationId,  // Safe, within Java int range
+        id: notificationId,
         title: 'Test Notification',
         body: getRandomMessage(),
         schedule: { at: new Date(Date.now() + 2000) }, // Show after 2 seconds

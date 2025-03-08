@@ -10,21 +10,28 @@ const SCHEDULER_NOTIFICATION_ID_KEY = "schedulerLastNotificationId";
  * Generate a unique notification ID within Java int range
  */
 const getNextScheduledNotificationId = async (): Promise<number> => {
-  const { value } = await Preferences.get({ key: SCHEDULER_NOTIFICATION_ID_KEY });
+  try {
+    const { value } = await Preferences.get({ key: SCHEDULER_NOTIFICATION_ID_KEY });
 
-  let lastId = value ? parseInt(value, 10) : 0;
-  let nextId = lastId + 1;
+    // Start with a small base ID
+    let lastId = value ? parseInt(value, 10) : 100;
+    let nextId = lastId + 1;
 
-  // Keep it within a safe range for Java int (0 - 100,000)
-  if (nextId > 100000) {
-    nextId = 1; // Reset to 1 if exceeded
+    // Keep it smaller than 10000 to ensure it's well within Java int range
+    if (nextId > 10000) {
+      nextId = 101; // Reset to a small number
+    }
+
+    // Save the new last ID
+    await Preferences.set({ key: SCHEDULER_NOTIFICATION_ID_KEY, value: nextId.toString() });
+
+    console.log("Generated new scheduled notification ID:", nextId, "type:", typeof nextId);
+    return nextId;
+  } catch (error) {
+    console.error("Error generating notification ID:", error);
+    // Fallback to a very safe small number
+    return 101;
   }
-
-  // Save the new last ID
-  await Preferences.set({ key: SCHEDULER_NOTIFICATION_ID_KEY, value: nextId.toString() });
-
-  console.log("Generated new scheduled notification ID:", nextId);
-  return nextId;
 };
 
 /**
@@ -57,9 +64,9 @@ export const scheduleRestEndNotification = async (delay: number): Promise<number
       }
     }
 
-    // Generate a safe integer ID for the notification (within Java int range)
-    const notificationId = await getNextScheduledNotificationId();
-    console.log("Generated notification ID:", notificationId, typeof notificationId);
+    // Use fixed small ID for rest notification (definitely within Java int range)
+    const notificationId = 101;
+    console.log("Using fixed notification ID:", notificationId, "type:", typeof notificationId);
 
     // Ensure the notification channel is created on Android
     if (isAndroidPlatform()) {
