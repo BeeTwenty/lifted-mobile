@@ -1,4 +1,3 @@
-
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { PushNotifications } from '@capacitor/push-notifications';
 import { Preferences } from '@capacitor/preferences';
@@ -32,7 +31,7 @@ const getNextNotificationId = async (): Promise<number> => {
   } catch (error) {
     console.error("Error generating notification ID:", error);
     // Fallback to a very safe small number if anything goes wrong
-    return 42;
+    return Math.floor(Math.random() * 100) + 1;
   }
 };
 
@@ -94,11 +93,9 @@ export const sendTestNotification = async (): Promise<boolean> => {
       }
     }
 
-    // Use a small integer value that's guaranteed to be within Java int range
-    // Java integers range from -2^31 to 2^31 - 1 (-2,147,483,648 to 2,147,483,647)
-    // But we'll use a very small number to be safe
-    const notificationId = 42;
-    console.log("Using fixed notification ID:", notificationId, "type:", typeof notificationId);
+    // Generate a dynamic notification ID within safe range for Java
+    const notificationId = await getNextNotificationId();
+    console.log("Using dynamic notification ID:", notificationId, "type:", typeof notificationId);
 
     // Make sure the notification ID is recognized as a number
     const idAsNumber = Number(notificationId);

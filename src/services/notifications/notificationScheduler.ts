@@ -14,7 +14,7 @@ const getNextScheduledNotificationId = async (): Promise<number> => {
   try {
     const { value } = await Preferences.get({ key: SCHEDULER_NOTIFICATION_ID_KEY });
 
-    // Start with a small base ID
+    // Start with a small base ID for rest timer notifications
     let lastId = value ? parseInt(value, 10) : 100;
     let nextId = lastId + 1;
 
@@ -30,8 +30,8 @@ const getNextScheduledNotificationId = async (): Promise<number> => {
     return nextId;
   } catch (error) {
     console.error("Error generating notification ID:", error);
-    // Fallback to a very safe small number
-    return 101;
+    // Fallback to a random number between 101-999 if anything goes wrong
+    return Math.floor(Math.random() * 899) + 101;
   }
 };
 
@@ -65,9 +65,9 @@ export const scheduleRestEndNotification = async (delay: number): Promise<number
       }
     }
 
-    // Use a small integer guaranteed to be within Java int range
-    const notificationId = 101;
-    console.log("Using fixed notification ID:", notificationId, "type:", typeof notificationId);
+    // Generate a dynamic notification ID within safe range
+    const notificationId = await getNextScheduledNotificationId();
+    console.log("Using dynamic notification ID:", notificationId, "type:", typeof notificationId);
 
     // Make sure the notification ID is recognized as a number
     const idAsNumber = Number(notificationId);
