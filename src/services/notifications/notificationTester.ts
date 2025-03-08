@@ -94,14 +94,19 @@ export const sendTestNotification = async (): Promise<boolean> => {
       }
     }
 
-    // Use a hardcoded small number for the notification ID
-    // This ensures it's definitely within Java int range
+    // Use a small integer value that's guaranteed to be within Java int range
+    // Java integers range from -2^31 to 2^31 - 1 (-2,147,483,648 to 2,147,483,647)
+    // But we'll use a very small number to be safe
     const notificationId = 42;
     console.log("Using fixed notification ID:", notificationId, "type:", typeof notificationId);
 
+    // Make sure the notification ID is recognized as a number
+    const idAsNumber = Number(notificationId);
+    console.log("ID as explicit number:", idAsNumber, "type:", typeof idAsNumber);
+
     await LocalNotifications.schedule({
       notifications: [{
-        id: notificationId,
+        id: idAsNumber,
         title: 'Test Notification',
         body: getRandomMessage(),
         schedule: { at: new Date(Date.now() + 2000) }, // Show after 2 seconds
@@ -113,7 +118,7 @@ export const sendTestNotification = async (): Promise<boolean> => {
       }]
     });
 
-    console.log(`Test notification scheduled with ID: ${notificationId}`);
+    console.log(`Test notification scheduled with ID: ${idAsNumber}`);
     return true;
   } catch (error) {
     console.error('Error sending test notification:', error);

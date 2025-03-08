@@ -65,9 +65,13 @@ export const scheduleRestEndNotification = async (delay: number): Promise<number
       }
     }
 
-    // Use a hardcoded small ID that is definitely within Java int range
+    // Use a small integer guaranteed to be within Java int range
     const notificationId = 101;
     console.log("Using fixed notification ID:", notificationId, "type:", typeof notificationId);
+
+    // Make sure the notification ID is recognized as a number
+    const idAsNumber = Number(notificationId);
+    console.log("ID as explicit number:", idAsNumber, "type:", typeof idAsNumber);
 
     // Ensure the notification channel is created on Android
     if (isAndroidPlatform()) {
@@ -105,7 +109,7 @@ export const scheduleRestEndNotification = async (delay: number): Promise<number
           // First attempt - full feature
           await LocalNotifications.schedule({
             notifications: [{
-              id: notificationId,
+              id: idAsNumber,
               title,
               body,
               schedule: { 
@@ -123,7 +127,7 @@ export const scheduleRestEndNotification = async (delay: number): Promise<number
           // Second attempt - simplified
           await LocalNotifications.schedule({
             notifications: [{
-              id: notificationId,
+              id: idAsNumber,
               title,
               body,
               schedule: { at: scheduleTime }
@@ -134,7 +138,7 @@ export const scheduleRestEndNotification = async (delay: number): Promise<number
           const immediateTime = new Date(Date.now() + 2000);
           await LocalNotifications.schedule({
             notifications: [{
-              id: notificationId,
+              id: idAsNumber,
               title,
               body: "Time's up! Get back to your workout.",
               schedule: { at: immediateTime }
@@ -149,7 +153,7 @@ export const scheduleRestEndNotification = async (delay: number): Promise<number
         const newPending = await LocalNotifications.getPending();
         console.log('Pending notifications after scheduling:', newPending);
 
-        return notificationId;
+        return idAsNumber;
       } catch (error) {
         console.error(`Error scheduling notification (attempt ${attempts}):`, error);
       }
@@ -160,7 +164,7 @@ export const scheduleRestEndNotification = async (delay: number): Promise<number
       return null;
     }
 
-    return notificationId;
+    return idAsNumber;
   } catch (error) {
     console.error('Error in scheduleRestEndNotification:', error);
     return null;
