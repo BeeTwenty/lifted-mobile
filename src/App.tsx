@@ -24,6 +24,13 @@ const App = () => {
     // Ensure BackgroundMode only runs when the device is ready
     document.addEventListener("deviceready", () => {
       BackgroundMode.enable();
+      BackgroundMode.disableBatteryOptimizations();
+      BackgroundMode.overrideBackButton();
+      BackgroundMode.setDefaults({
+        title: "Workout Active",
+        text: "Your workout is running in the background",
+        silent: false
+      });
 
       BackgroundMode.on("activate");
       BackgroundMode.on("deactivate");
