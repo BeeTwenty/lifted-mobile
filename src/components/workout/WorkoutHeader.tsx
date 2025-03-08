@@ -147,7 +147,7 @@ const WorkoutHeader = ({
           onSkipRest={onSkipRest}
         />
       </div>
-
+{/* 
       <Button 
         variant="outline" 
         size="sm" 
@@ -164,6 +164,7 @@ const WorkoutHeader = ({
         )}
         {isSendingNotification ? "Sending..." : notificationsSupported === false ? "Fix Notifications" : "Test Notification"}
       </Button>
+      */}
     </div>
   );
 };
