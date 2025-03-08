@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "458868700898",
+    "project_id": "lifted-7332c",
+    "storage_bucket": "lifted-7332c.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:458868700898:android:efe87b96d41b1f98b810bb",
+        "android_client_info": {
+          "package_name": "com.au11no.lifted"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDKVLEiD7mO1nCYAzn5yAAwWK5WTJ9a1Ns"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
