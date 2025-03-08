@@ -1,3 +1,4 @@
+
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { PushNotifications } from '@capacitor/push-notifications';
 import { Preferences } from '@capacitor/preferences';
@@ -86,13 +87,13 @@ export const sendTestNotification = async (): Promise<boolean> => {
       }
     }
 
-    // ✅ Get a persistent, unique notification ID
-    const notificationId = 123;
-    console.log("Type of notification ID before scheduling:", typeof notificationId);
+    // Get a unique notification ID (must be within Java int range)
+    const notificationId = await getNextNotificationId();
+    console.log("Type of notification ID before scheduling:", typeof notificationId, notificationId);
 
     await LocalNotifications.schedule({
       notifications: [{
-        id: notificationId,  // ✅ Safe, persistent ID
+        id: notificationId,  // Safe, within Java int range
         title: 'Test Notification',
         body: getRandomMessage(),
         schedule: { at: new Date(Date.now() + 2000) }, // Show after 2 seconds

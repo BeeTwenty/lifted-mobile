@@ -164,23 +164,6 @@ const WorkoutHeader = ({
         )}
         {isSendingNotification ? "Sending..." : notificationsSupported === false ? "Fix Notifications" : "Test Notification"}
       </Button>
-      
-      <Button 
-        variant="outline" 
-        size="sm" 
-        className={`self-end flex items-center gap-2 ${notificationsSupported === false ? 'border-yellow-500' : ''}`}
-        onClick={handleTestNotification}
-        disabled={isSendingNotification}
-      >
-        {isSendingNotification ? (
-          <span className="animate-spin">⟳</span>
-        ) : notificationsSupported === false ? (
-          <AlertTriangle className="h-4 w-4 text-yellow-500" />
-        ) : (
-          <Bell className="h-4 w-4" />
-        )}
-        {isSendingNotification ? "Sending..." : notificationsSupported === false ? "Fix Notifications" : "Test Notification"}
-      </Button>
     </div>
   );
 };

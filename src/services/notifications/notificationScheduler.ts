@@ -2,6 +2,30 @@ import { LocalNotifications } from '@capacitor/local-notifications';
 import { isNativePlatform, isAndroidPlatform, logPlatformInfo } from './utils/platformUtils';
 import { getRandomMessage } from './utils/notificationMessages';
 import { registerNotificationChannel } from './notificationChannels';
+import { Preferences } from '@capacitor/preferences';
+
+const SCHEDULER_NOTIFICATION_ID_KEY = "schedulerLastNotificationId";
+
+/**
+ * Generate a unique notification ID within Java int range
+ */
+const getNextScheduledNotificationId = async (): Promise<number> => {
+  const { value } = await Preferences.get({ key: SCHEDULER_NOTIFICATION_ID_KEY });
+
+  let lastId = value ? parseInt(value, 10) : 0;
+  let nextId = lastId + 1;
+
+  // Keep it within a safe range for Java int (0 - 100,000)
+  if (nextId > 100000) {
+    nextId = 1; // Reset to 1 if exceeded
+  }
+
+  // Save the new last ID
+  await Preferences.set({ key: SCHEDULER_NOTIFICATION_ID_KEY, value: nextId.toString() });
+
+  console.log("Generated new scheduled notification ID:", nextId);
+  return nextId;
+};
 
 /**
  * Schedule a rest timer completion notification
@@ -33,18 +57,9 @@ export const scheduleRestEndNotification = async (delay: number): Promise<number
       }
     }
 
-    // Generate a safe integer ID for the notification
-    const pending = await LocalNotifications.getPending();
-console.log("Pending notifications:", pending.notifications);
-
-// Correct way to retrieve last ID
-const lastId = pending.notifications.length > 0 
-  ? pending.notifications[pending.notifications.length - 1].id 
-  : 0;
-
-// Use a random safe ID within Java's int range
-const notificationId = Math.trunc(Math.random() * 100000);
-console.log("Generated notification ID:", notificationId, typeof notificationId);
+    // Generate a safe integer ID for the notification (within Java int range)
+    const notificationId = await getNextScheduledNotificationId();
+    console.log("Generated notification ID:", notificationId, typeof notificationId);
 
     // Ensure the notification channel is created on Android
     if (isAndroidPlatform()) {
