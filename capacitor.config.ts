@@ -60,6 +60,20 @@ const config: CapacitorConfig = {
     PushNotifications: {
       presentationOptions: ["badge", "sound", "alert"],
       firebaseAutoInit: true
+    },
+    BackgroundMode: {
+      enable: true,
+      title: "Workout Running",
+      text: "Your workout is still active",
+      icon: "notification_icon",
+      color: "FF0000",
+      silent: false,
+      hidden: false,
+      disableWebViewOptimizations: true,
+      disableBatteryOptimizations: true,
+      moveToBackground: false,
+      overrideBackButton: true,
+      lockScreen: false
     }
   },
   bundledWebRuntime: false

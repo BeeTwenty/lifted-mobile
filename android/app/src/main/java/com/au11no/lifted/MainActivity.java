@@ -1,3 +1,4 @@
+
 package com.au11no.lifted;
 
 import android.content.Intent;
@@ -11,6 +12,8 @@ import android.widget.Toast;
 import com.getcapacitor.BridgeActivity;
 
 public class MainActivity extends BridgeActivity {
+    private static final String TAG = "MainActivity";
+    
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -21,18 +24,31 @@ public class MainActivity extends BridgeActivity {
         PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
 
         if (pm != null && !pm.isIgnoringBatteryOptimizations(getPackageName())) {
-            Log.d("BatteryOptimization", "Requesting battery optimization exemption");
+            Log.d(TAG, "Requesting battery optimization exemption");
 
             Intent intent = new Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
             intent.setData(Uri.parse("package:" + getPackageName()));
             try {
                 startActivity(intent);
-                Toast.makeText(this, "Please disable battery optimization for the app.", Toast.LENGTH_LONG).show();
+                Toast.makeText(this, "Please disable battery optimization for the app to ensure timers work properly in the background.", Toast.LENGTH_LONG).show();
             } catch (Exception e) {
-                Log.e("BatteryOptimization", "Battery optimization request failed", e);
+                Log.e(TAG, "Battery optimization request failed", e);
+                Toast.makeText(this, "Please manually disable battery optimization for this app in device settings for proper timer functionality.", Toast.LENGTH_LONG).show();
             }
         } else {
-            Log.d("BatteryOptimization", "Battery optimization already disabled.");
+            Log.d(TAG, "Battery optimization already disabled.");
         }
+    }
+    
+    @Override
+    protected void onResume() {
+        super.onResume();
+        Log.d(TAG, "App resumed");
+    }
+    
+    @Override
+    protected void onPause() {
+        super.onPause();
+        Log.d(TAG, "App paused");
     }
 }

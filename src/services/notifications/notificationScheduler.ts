@@ -106,7 +106,7 @@ export const scheduleRestEndNotification = async (delay: number): Promise<number
         const body = getRandomMessage();
 
         if (attempts === 1) {
-          // First attempt - full feature
+          // First attempt - full feature with improved background support
           await LocalNotifications.schedule({
             notifications: [{
               id: idAsNumber,
@@ -114,23 +114,33 @@ export const scheduleRestEndNotification = async (delay: number): Promise<number
               body,
               schedule: { 
                 at: scheduleTime,
-                allowWhileIdle: true 
+                allowWhileIdle: true, // Critical for background operation
+                repeats: false,       // Ensure no repeat
+                every: 'minute',      // Fallback if repeat somehow gets activated
+                count: 1              // Fallback limit to one notification
               },
+              sound: isAndroidPlatform() ? 'default' : undefined,
               ...(isAndroidPlatform() ? {
                 channelId: 'workout-timer',
                 smallIcon: 'ic_stat_icon_config_sample',
-                iconColor: '#488AFF'
+                iconColor: '#488AFF',
+                ongoing: false, // Don't make it persistent
+                autoClear: true
               } : {})
             }]
           });
         } else if (attempts === 2) {
-          // Second attempt - simplified
+          // Second attempt - simplified with guaranteed background delivery
           await LocalNotifications.schedule({
             notifications: [{
               id: idAsNumber,
               title,
               body,
-              schedule: { at: scheduleTime }
+              schedule: { 
+                at: scheduleTime,
+                allowWhileIdle: true
+              },
+              sound: isAndroidPlatform() ? 'default' : undefined
             }]
           });
         } else {
@@ -139,9 +149,13 @@ export const scheduleRestEndNotification = async (delay: number): Promise<number
           await LocalNotifications.schedule({
             notifications: [{
               id: idAsNumber,
-              title,
-              body: "Time's up! Get back to your workout.",
-              schedule: { at: immediateTime }
+              title: "Time's up!",
+              body: "Get back to your workout.",
+              schedule: { 
+                at: immediateTime,
+                allowWhileIdle: true 
+              },
+              sound: isAndroidPlatform() ? 'default' : undefined
             }]
           });
         }

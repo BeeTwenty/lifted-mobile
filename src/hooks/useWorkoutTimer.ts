@@ -6,6 +6,7 @@ import {
   initializeNotifications 
 } from "@/services/notifications";
 import { Capacitor } from '@capacitor/core';
+import { BackgroundMode } from "@awesome-cordova-plugins/background-mode";
 
 export const useWorkoutTimer = (initialRunningState = false) => {
   const [isRunning, setIsRunning] = useState(initialRunningState);
@@ -22,11 +23,42 @@ export const useWorkoutTimer = (initialRunningState = false) => {
   
   // Track notification scheduling attempts
   const notificationAttemptedRef = useRef<boolean>(false);
+  const backgroundModeActive = useRef<boolean>(false);
 
   // Initialize notifications when hook is first used
   useEffect(() => {
     console.log('Initializing notifications in useWorkoutTimer');
     initializeNotifications();
+    
+    // Enable background mode if on native platform
+    if (Capacitor.isNativePlatform()) {
+      try {
+        console.log('Enabling background mode for timer');
+        BackgroundMode.enable();
+        BackgroundMode.on('activate', () => {
+          console.log('Background mode activated');
+          backgroundModeActive.current = true;
+        });
+        BackgroundMode.on('deactivate', () => {
+          console.log('Background mode deactivated');
+          backgroundModeActive.current = false;
+        });
+        BackgroundMode.disableBatteryOptimizations();
+      } catch (error) {
+        console.error('Error setting up background mode:', error);
+      }
+    }
+
+    return () => {
+      // Clean up background mode when component unmounts
+      if (Capacitor.isNativePlatform()) {
+        try {
+          BackgroundMode.disable();
+        } catch (error) {
+          console.error('Error disabling background mode:', error);
+        }
+      }
+    };
   }, []);
 
   // Background-aware timer for workout
@@ -61,6 +93,23 @@ export const useWorkoutTimer = (initialRunningState = false) => {
   // Background-aware timer for rest periods with improved notification handling
   useEffect(() => {
     if (restTimeRemaining !== null && restTimeRemaining > 0) {
+      // Enable background mode when rest timer starts
+      if (Capacitor.isNativePlatform() && restTimeRemaining > 30) {
+        try {
+          console.log('Enabling background mode for rest timer');
+          BackgroundMode.enable();
+          BackgroundMode.setDefaults({
+            title: "Rest Timer Active",
+            text: `${restTimeRemaining}s remaining in your rest period`,
+            hidden: false,
+            silent: false
+          });
+          BackgroundMode.disableBatteryOptimizations();
+        } catch (error) {
+          console.error('Error enabling background mode for rest timer:', error);
+        }
+      }
+
       // Schedule notification when rest timer starts
       if (restTimeRemaining && !notificationAttemptedRef.current) {
         console.log(`Scheduling notification for rest timer: ${restTimeRemaining} seconds`);
@@ -86,11 +135,30 @@ export const useWorkoutTimer = (initialRunningState = false) => {
           restStartTimestampRef.current = Date.now();
         }
         
+        // Calculate time based on start timestamp, not incremental updates
+        // This ensures accuracy even when the app goes to background
         const now = Date.now();
         const elapsedRestTime = Math.floor((now - restStartTimestampRef.current) / 1000);
         const newRestTimeRemaining = Math.max(0, restTimeRemaining - elapsedRestTime);
         
-        setRestTimeRemaining(newRestTimeRemaining);
+        // Update the UI if different from current value
+        if (newRestTimeRemaining !== restTimeRemaining) {
+          setRestTimeRemaining(newRestTimeRemaining);
+          
+          // Update background mode text if active
+          if (Capacitor.isNativePlatform() && backgroundModeActive.current && newRestTimeRemaining > 0) {
+            try {
+              BackgroundMode.setDefaults({
+                title: "Rest Timer Active",
+                text: `${newRestTimeRemaining}s remaining in your rest period`,
+                hidden: false,
+                silent: false
+              });
+            } catch (error) {
+              console.error('Error updating background mode text:', error);
+            }
+          }
+        }
         
         if (newRestTimeRemaining <= 0) {
           if (restTimerRef.current) {
@@ -104,6 +172,21 @@ export const useWorkoutTimer = (initialRunningState = false) => {
           setRestTimeRemaining(null);
           restStartTimestampRef.current = null;
           notificationAttemptedRef.current = false;
+          
+          // Disable background mode when rest timer completes
+          if (Capacitor.isNativePlatform()) {
+            try {
+              // Don't actually disable, just update the notification
+              BackgroundMode.setDefaults({
+                title: "Workout Active",
+                text: "Rest period complete. Continue your workout!",
+                hidden: false,
+                silent: false
+              });
+            } catch (error) {
+              console.error('Error updating background mode after rest timer completion:', error);
+            }
+          }
         } else {
           restTimerRef.current = window.setTimeout(updateRestTimer, 1000);
         }
@@ -176,6 +259,8 @@ export const useWorkoutTimer = (initialRunningState = false) => {
             setRestTimeRemaining(newRestTimeRemaining);
           }
         }
+      } else {
+        console.log('App went to background, last timestamp saved for accurate timekeeping');
       }
     };
     
