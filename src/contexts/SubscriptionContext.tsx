@@ -38,19 +38,31 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
         .eq('id', user.id)
         .maybeSingle();
       
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching profile:", error);
+        throw error;
+      }
       
       // If no profile exists, create one with basic status
       if (!data) {
         console.log("No profile found, creating one with basic status");
         const { error: insertError } = await supabase
           .from('profiles')
-          .insert({ id: user.id, status: 'basic' });
+          .insert({ 
+            id: user.id, 
+            status: 'basic',
+            full_name: user.user_metadata?.full_name || '',
+            avatar_url: user.user_metadata?.avatar_url || ''
+          });
           
-        if (insertError) throw insertError;
+        if (insertError) {
+          console.error("Error creating profile:", insertError);
+          throw insertError;
+        }
         
         setStatus("basic");
       } else {
+        console.log("Profile found with status:", data.status);
         setStatus(data.status as SubscriptionStatus || "basic");
       }
     } catch (error: any) {
@@ -68,6 +80,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
   }, [user]);
 
   const refreshSubscription = async () => {
+    console.log("Refreshing subscription status...");
     await fetchSubscriptionStatus();
   };
 

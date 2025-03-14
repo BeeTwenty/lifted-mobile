@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Crown, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
+import { Crown, CheckCircle, AlertCircle, Loader2, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
@@ -14,6 +14,7 @@ const SubscriptionSettings = () => {
   const { user } = useAuth();
   const { status, isProUser, refreshSubscription } = useSubscription();
   const [isLoading, setIsLoading] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const location = useLocation();
 
   // Check for query parameters from Stripe redirect
@@ -22,13 +23,19 @@ const SubscriptionSettings = () => {
     const success = queryParams.get("success");
     const canceled = queryParams.get("canceled");
 
-    if (success === "true") {
-      toast.success("Subscription upgrade successful! Welcome to Lifted Pro.");
-      refreshSubscription();
-    } else if (canceled === "true") {
-      toast.info("Subscription upgrade canceled.");
-    }
-  }, [location, refreshSubscription]);
+    const checkSubscriptionStatus = async () => {
+      if (success === "true") {
+        setIsRefreshing(true);
+        await refreshSubscription();
+        setIsRefreshing(false);
+        toast.success("Subscription upgrade successful! Welcome to Lifted Pro.");
+      } else if (canceled === "true") {
+        toast.info("Subscription upgrade canceled.");
+      }
+    };
+
+    checkSubscriptionStatus();
+  }, [location.search, refreshSubscription]);
 
   const handleUpgrade = async () => {
     if (!user) {
@@ -85,14 +92,38 @@ const SubscriptionSettings = () => {
     }
   };
 
+  const handleManualRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      await refreshSubscription();
+      toast.success("Subscription status refreshed");
+    } catch (error) {
+      console.error("Error refreshing subscription:", error);
+      toast.error("Failed to refresh subscription status");
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
         <div className="flex justify-between items-center">
           <CardTitle>Subscription</CardTitle>
-          <Badge variant={isProUser ? "default" : "outline"} className={isProUser ? "bg-amber-600" : ""}>
-            {isProUser ? "PRO" : "BASIC"}
-          </Badge>
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={handleManualRefresh} 
+              disabled={isRefreshing}
+              title="Refresh subscription status"
+            >
+              <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+            </Button>
+            <Badge variant={isProUser ? "default" : "outline"} className={isProUser ? "bg-amber-600" : ""}>
+              {status === "loading" ? "LOADING" : isProUser ? "PRO" : "BASIC"}
+            </Badge>
+          </div>
         </div>
         <CardDescription>Manage your subscription plan</CardDescription>
       </CardHeader>

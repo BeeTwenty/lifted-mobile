@@ -8,13 +8,22 @@ import ProfileForm from "@/components/settings/ProfileForm";
 import ApiKeysManager from "@/components/settings/ApiKeysManager";
 import SubscriptionSettings from "@/components/settings/SubscriptionSettings";
 import NavBar from "@/components/NavBar";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useLocation } from "react-router-dom";
 
 const Settings = () => {
   const { user, signOut } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const [activeTab, setActiveTab] = useState("profile");
+  const location = useLocation();
+  
+  // Set the active tab based on URL path
+  useEffect(() => {
+    if (location.pathname.includes("/settings/subscription")) {
+      setActiveTab("subscription");
+    }
+  }, [location.pathname]);
   
   if (!user) {
     return null;
