@@ -1,151 +1,78 @@
-
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
+import { useSubscription } from "@/contexts/SubscriptionContext";
 import NavBar from "@/components/NavBar";
 import WeightForm from "@/components/weight/WeightForm";
+import WeightHistory from "@/components/weight/WeightHistory";
 import WeightChart from "@/components/weight/WeightChart";
 import BMICalculator from "@/components/weight/BMICalculator";
-import WeightHistory from "@/components/weight/WeightHistory";
-import { toast } from "sonner";
+import UpgradePrompt from "@/components/subscription/UpgradePrompt";
 
-export interface WeightRecord {
+interface WeightEntry {
   id: string;
-  weight: number;
   date: string;
-  created_at: string;
+  weight: number;
 }
 
 const WeightTracker = () => {
-  const [weightRecords, setWeightRecords] = useState<WeightRecord[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [userHeight, setUserHeight] = useState<number | null>(null);
   const { user } = useAuth();
-  const navigate = useNavigate();
+  const { isProUser } = useSubscription();
+  const [weights, setWeights] = useState<WeightEntry[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!user) return;
-    
-    const fetchWeightRecords = async () => {
+    const fetchWeights = async () => {
+      if (!user) return;
+
+      setLoading(true);
       try {
-        setIsLoading(true);
-        
-        // Fetch user's height from profile
-        const { data: profileData, error: profileError } = await supabase
-          .from('profiles')
-          .select('height')
-          .eq('id', user.id)
-          .single();
-          
-        if (profileError) throw profileError;
-        setUserHeight(profileData?.height || null);
-        
-        // Fetch weight records
-        const { data, error } = await supabase
-          .from('weight_records')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('date', { ascending: false });
-          
-        if (error) throw error;
-        
-        setWeightRecords(data || []);
-      } catch (error: any) {
-        console.error('Error fetching weight records:', error);
-        toast.error('Failed to load your weight records');
+        // Simulate fetching weights from a database
+        const mockWeights: WeightEntry[] = [
+          { id: "1", date: "2024-01-01", weight: 70 },
+          { id: "2", date: "2024-01-08", weight: 71 },
+          { id: "3", date: "2024-01-15", weight: 72 },
+        ];
+        setWeights(mockWeights);
+      } catch (error) {
+        console.error("Failed to fetch weights", error);
       } finally {
-        setIsLoading(false);
+        setLoading(false);
       }
     };
 
-    fetchWeightRecords();
+    fetchWeights();
   }, [user]);
 
-  const handleAddWeight = async (weight: number) => {
-    try {
-      if (!user) return;
-
-      const newRecord = {
-        user_id: user.id,
-        weight,
-        date: new Date().toISOString().split('T')[0]
-      };
-
-      const { data, error } = await supabase
-        .from('weight_records')
-        .insert(newRecord)
-        .select()
-        .single();
-
-      if (error) throw error;
-      
-      setWeightRecords([data, ...weightRecords]);
-      toast.success('Weight record added successfully');
-    } catch (error: any) {
-      console.error('Error adding weight record:', error);
-      toast.error('Failed to add weight record');
-    }
+  const handleNewWeight = (newWeight: WeightEntry) => {
+    setWeights([...weights, newWeight]);
   };
 
-  const handleDeleteRecord = async (id: string) => {
-    try {
-      const { error } = await supabase
-        .from('weight_records')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
-      
-      setWeightRecords(weightRecords.filter(record => record.id !== id));
-      toast.success('Weight record deleted');
-    } catch (error: any) {
-      console.error('Error deleting weight record:', error);
-      toast.error('Failed to delete weight record');
-    }
+  const handleDeleteWeight = (id: string) => {
+    setWeights(weights.filter((weight) => weight.id !== id));
   };
 
-  const latestWeight = weightRecords.length > 0 ? weightRecords[0].weight : null;
+  if (!user) return null;
 
   return (
     <div className="min-h-screen bg-background">
       <NavBar />
-      <main className="max-w-md mx-auto px-4 py-6">
-        <h1 className="text-xl font-semibold mb-6 text-foreground">Weight Tracker</h1>
+      <div className="max-w-md mx-auto px-4 py-6 space-y-6">
+        <h1 className="text-2xl font-bold text-foreground">Weight Tracker</h1>
         
-        <div className="mb-6">
-          <WeightForm onAddWeight={handleAddWeight} />
-          {userHeight ? (
-            <p className="text-sm text-muted-foreground mt-1">
-              Your height: {userHeight} cm
-            </p>
-          ) : (
-            <p className="text-sm text-muted-foreground mt-1">
-              Your height can be updated in the settings page
-            </p>
-          )}
-        </div>
-        
-        {latestWeight && userHeight && (
-          <div className="mb-6">
-            <BMICalculator weight={latestWeight} height={userHeight} />
-          </div>
-        )}
-        
-        {weightRecords.length > 0 && (
-          <div className="mb-6">
-            <WeightChart weightRecords={weightRecords} />
-          </div>
-        )}
-        
-        <div>
-          <WeightHistory 
-            weightRecords={weightRecords} 
-            isLoading={isLoading}
-            onDelete={handleDeleteRecord}
+        {isProUser ? (
+          <>
+            <WeightForm onNewWeight={handleNewWeight} />
+            <WeightChart weights={weights} />
+            <BMICalculator />
+            <WeightHistory weights={weights} onDeleteWeight={handleDeleteWeight} />
+          </>
+        ) : (
+          <UpgradePrompt 
+            title="Weight Tracking is a Pro Feature" 
+            description="Upgrade to Lifted Pro to track your weight and body metrics."
           />
-        </div>
-      </main>
+        )}
+      </div>
     </div>
   );
 };

@@ -1,0 +1,81 @@
+
+import { createContext, useContext, useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "./AuthContext";
+import { toast } from "sonner";
+
+type SubscriptionStatus = "basic" | "pro" | "loading";
+
+interface SubscriptionContextType {
+  status: SubscriptionStatus;
+  isProUser: boolean;
+  isLoading: boolean;
+  refreshSubscription: () => Promise<void>;
+}
+
+const SubscriptionContext = createContext<SubscriptionContextType | undefined>(undefined);
+
+export function SubscriptionProvider({ children }: { children: React.ReactNode }) {
+  const { user } = useAuth();
+  const [status, setStatus] = useState<SubscriptionStatus>("loading");
+  const [isLoading, setIsLoading] = useState(true);
+
+  const fetchSubscriptionStatus = async () => {
+    if (!user) {
+      setStatus("basic");
+      setIsLoading(false);
+      return;
+    }
+    
+    try {
+      setIsLoading(true);
+      
+      // Fetch the user's profile which includes subscription status
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('status')
+        .eq('id', user.id)
+        .single();
+      
+      if (error) throw error;
+      
+      setStatus(data?.status as SubscriptionStatus || "basic");
+    } catch (error: any) {
+      console.error("Error fetching subscription status:", error);
+      setStatus("basic"); // Default to basic on error
+      toast.error("Failed to fetch subscription status");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Fetch subscription status when the user changes
+  useEffect(() => {
+    fetchSubscriptionStatus();
+  }, [user]);
+
+  const refreshSubscription = async () => {
+    await fetchSubscriptionStatus();
+  };
+
+  return (
+    <SubscriptionContext.Provider
+      value={{
+        status,
+        isProUser: status === "pro",
+        isLoading,
+        refreshSubscription,
+      }}
+    >
+      {children}
+    </SubscriptionContext.Provider>
+  );
+}
+
+export const useSubscription = () => {
+  const context = useContext(SubscriptionContext);
+  if (context === undefined) {
+    throw new Error("useSubscription must be used within a SubscriptionProvider");
+  }
+  return context;
+};
