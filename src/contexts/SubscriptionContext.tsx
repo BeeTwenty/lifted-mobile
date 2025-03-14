@@ -31,15 +31,28 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
       setIsLoading(true);
       
       // Fetch the user's profile which includes subscription status
+      // Using maybeSingle instead of single to avoid errors when no profile exists
       const { data, error } = await supabase
         .from('profiles')
         .select('status')
         .eq('id', user.id)
-        .single();
+        .maybeSingle();
       
       if (error) throw error;
       
-      setStatus(data?.status as SubscriptionStatus || "basic");
+      // If no profile exists, create one with basic status
+      if (!data) {
+        console.log("No profile found, creating one with basic status");
+        const { error: insertError } = await supabase
+          .from('profiles')
+          .insert({ id: user.id, status: 'basic' });
+          
+        if (insertError) throw insertError;
+        
+        setStatus("basic");
+      } else {
+        setStatus(data.status as SubscriptionStatus || "basic");
+      }
     } catch (error: any) {
       console.error("Error fetching subscription status:", error);
       setStatus("basic"); // Default to basic on error
