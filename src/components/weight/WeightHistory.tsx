@@ -2,7 +2,7 @@
 import { format, parseISO } from "date-fns";
 import { Trash } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import type { WeightRecord } from "@/pages/WeightTracker";
+import { WeightRecord } from "@/types/weight";
 
 interface WeightHistoryProps {
   weightRecords: WeightRecord[];

@@ -1,6 +1,7 @@
+
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Auth from "@/pages/Auth";
-import Home from "@/pages/Home";
+import Home from "@/pages/Index";
 import Settings from "@/pages/Settings";
 import CreateWorkout from "@/pages/CreateWorkout";
 import WeightTracker from "@/pages/WeightTracker";

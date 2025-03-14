@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/contexts/SubscriptionContext";
@@ -7,18 +8,15 @@ import WeightHistory from "@/components/weight/WeightHistory";
 import WeightChart from "@/components/weight/WeightChart";
 import BMICalculator from "@/components/weight/BMICalculator";
 import UpgradePrompt from "@/components/subscription/UpgradePrompt";
-
-interface WeightEntry {
-  id: string;
-  date: string;
-  weight: number;
-}
+import { WeightRecord } from "@/types/weight";
 
 const WeightTracker = () => {
   const { user } = useAuth();
   const { isProUser } = useSubscription();
-  const [weights, setWeights] = useState<WeightEntry[]>([]);
+  const [weights, setWeights] = useState<WeightRecord[]>([]);
   const [loading, setLoading] = useState(true);
+  const [height, setHeight] = useState(175); // Default height in cm
+  const latestWeight = weights.length > 0 ? weights[weights.length - 1].weight : 70; // Default weight
 
   useEffect(() => {
     const fetchWeights = async () => {
@@ -27,7 +25,7 @@ const WeightTracker = () => {
       setLoading(true);
       try {
         // Simulate fetching weights from a database
-        const mockWeights: WeightEntry[] = [
+        const mockWeights: WeightRecord[] = [
           { id: "1", date: "2024-01-01", weight: 70 },
           { id: "2", date: "2024-01-08", weight: 71 },
           { id: "3", date: "2024-01-15", weight: 72 },
@@ -43,7 +41,12 @@ const WeightTracker = () => {
     fetchWeights();
   }, [user]);
 
-  const handleNewWeight = (newWeight: WeightEntry) => {
+  const handleAddWeight = (weight: number) => {
+    const newWeight: WeightRecord = {
+      id: Date.now().toString(),
+      date: new Date().toISOString().split('T')[0],
+      weight
+    };
     setWeights([...weights, newWeight]);
   };
 
@@ -61,10 +64,10 @@ const WeightTracker = () => {
         
         {isProUser ? (
           <>
-            <WeightForm onNewWeight={handleNewWeight} />
-            <WeightChart weights={weights} />
-            <BMICalculator />
-            <WeightHistory weights={weights} onDeleteWeight={handleDeleteWeight} />
+            <WeightForm onAddWeight={handleAddWeight} />
+            <WeightChart weightRecords={weights} />
+            <BMICalculator weight={latestWeight} height={height} />
+            <WeightHistory weightRecords={weights} isLoading={loading} onDelete={handleDeleteWeight} />
           </>
         ) : (
           <UpgradePrompt 

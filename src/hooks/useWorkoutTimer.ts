@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { 
   scheduleRestEndNotification, 
@@ -35,14 +34,12 @@ export const useWorkoutTimer = (initialRunningState = false) => {
       try {
         console.log('Enabling background mode for timer');
         BackgroundMode.enable();
-        BackgroundMode.on('activate', () => {
-          console.log('Background mode activated');
-          backgroundModeActive.current = true;
-        });
-        BackgroundMode.on('deactivate', () => {
-          console.log('Background mode deactivated');
-          backgroundModeActive.current = false;
-        });
+        BackgroundMode.on('activate');
+        backgroundModeActive.current = true;
+        
+        BackgroundMode.on('deactivate');
+        backgroundModeActive.current = false;
+        
         BackgroundMode.disableBatteryOptimizations();
       } catch (error) {
         console.error('Error setting up background mode:', error);

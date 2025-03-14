@@ -1,7 +1,7 @@
 
 import { format, parseISO } from "date-fns";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts";
-import type { WeightRecord } from "@/pages/WeightTracker";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { WeightRecord } from "@/types/weight";
 
 interface WeightChartProps {
   weightRecords: WeightRecord[];
@@ -18,8 +18,8 @@ const WeightChart = ({ weightRecords }: WeightChartProps) => {
 
   // Calculate min and max for Y axis (with padding)
   const weights = chartData.map(d => d.weight);
-  const minWeight = Math.floor(Math.min(...weights) - 1);
-  const maxWeight = Math.ceil(Math.max(...weights) + 1);
+  const minWeight = Math.floor(Math.min(...weights) - 1) || 0;
+  const maxWeight = Math.ceil(Math.max(...weights) + 1) || 100;
   
   return (
     <div className="bg-card p-4 rounded-lg shadow-sm">
