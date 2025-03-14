@@ -7,7 +7,7 @@ const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
   httpClient: Stripe.createFetchHttpClient(),
 });
 
-const LIFTED_PRO_PRICE_ID = 'price_1OtqSYAJFrFGP9jfcnLqoY4H'; // Replace with your actual Stripe price ID
+const LIFTED_PRO_PRICE_ID = 'price_1R1vbRP6wHqHwKkzuGnmkQQk'; // Updated Stripe price ID
 
 serve(async (req) => {
   // Handle CORS preflight requests
